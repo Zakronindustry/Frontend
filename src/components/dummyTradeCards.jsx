@@ -1,0 +1,121 @@
+// src/components/dummyTradeCards.js
+
+export const dummyTradeCards = [
+  {
+    color: '#C1BCBC',
+    title: 'Frustrated Stop Loss Hit',
+    symbol: 'AUD/USD',
+    change: '-25 pips',
+    price1: '0.7400',
+    price2: '0.7375',
+    quantity: '1.5 lots',
+    description: 'Market moved against me and hit my stop loss. Felt frustrated.',
+    time: '5 days ago',
+    tags: ['#StopLoss', '#MorningSession'],
+    emoji: '😠'
+  },
+  {
+    color: '#F5BCBB',
+    title: 'Anxious Ahead of FOMC',
+    symbol: 'EUR/USD',
+    change: '+15 pips',
+    price1: '1.1750',
+    price2: '1.1765',
+    quantity: '2 lots',
+    description: 'Entered ahead of FOMC announcement, felt anxious.',
+    time: '3 days ago',
+    tags: ['#FOMC', '#EveningSession'],
+    emoji: '🤯'
+  },
+  {
+    color: '#D0E9BC',
+    title: 'Calm Long Position',
+    symbol: 'GBP/JPY',
+    change: '+60 pips',
+    price1: '151.50',
+    price2: '152.10',
+    quantity: '1 lot',
+    description: 'Followed my plan calmly and took profit at the target.',
+    time: '1 week ago',
+    tags: ['#LongPosition', '#AfternoonSession'],
+    emoji: '😊'
+  },
+  {
+    color: '#B0DCF0',
+    title: 'Confident Breakout Trade',
+    symbol: 'BTC/USD',
+    change: '+500 USD',
+    price1: '60000',
+    price2: '60500',
+    quantity: '0.5 BTC',
+    description: 'Confidently entered a breakout trade and secured profit.',
+    time: '2 days ago',
+    tags: ['#Breakout', '#MorningSession'],
+    emoji: '😎'
+  },
+  {
+    color: '#F5E0B2',
+    title: 'Greedy for More Gains',
+    symbol: 'TSLA',
+    change: '-10%',
+    price1: '$800',
+    price2: '$720',
+    quantity: '20 shares',
+    description: 'Held the position too long, hoping for more gains. Lost profits.',
+    time: '1 week ago',
+    tags: ['#Greedy', '#AfternoonSession'],
+    emoji: '🤑'
+  },
+  {
+    color: '#C1BCBC',
+    title: 'Stupid Range-Bound Trade',
+    symbol: 'NZD/USD',
+    change: '-15 pips',
+    price1: '0.7000',
+    price2: '0.6985',
+    quantity: '2 lots',
+    description: 'Frustrated as the market stayed range-bound and hit my stop loss.',
+    time: '4 days ago',
+    tags: ['#RangeBound', '#EveningSession'],
+    emoji: '😠'
+  },
+  {
+    color: '#F5BCBB',
+    title: 'Anxious During News Release',
+    symbol: 'USD/CAD',
+    change: '-30 pips',
+    price1: '1.2500',
+    price2: '1.2470',
+    quantity: '1.2 lots',
+    description: 'Entered a trade before a major news release and exited early due to anxiety.',
+    time: '2 days ago',
+    tags: ['#News', '#MorningSession'],
+    emoji: '🤯'
+  },
+  {
+    color: '#D0E9BC',
+    title: 'Calm Reversal Trade',
+    symbol: 'EUR/JPY',
+    change: '+40 pips',
+    price1: '130.00',
+    price2: '130.40',
+    quantity: '1 lot',
+    description: 'Spotted a reversal and calmly entered, exiting with profit.',
+    time: '6 days ago',
+    tags: ['#Reversal', '#AfternoonSession'],
+    emoji: '😊'
+  },
+  {
+    color: '#B0DCF0',
+    title: 'Confident Swing Trade',
+    symbol: 'ETH/USD',
+    change: '+300 USD',
+    price1: '3000',
+    price2: '3300',
+    quantity: '1 ETH',
+    description: 'Entered a swing trade confidently and took profit at resistance.',
+    time: '3 days ago',
+    tags: ['#SwingTrade', '#EveningSession'],
+    emoji: '😎'
+  }
+];

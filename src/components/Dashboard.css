@@ -1,0 +1,29 @@
+.trade-card-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 23px;
+}
+
+.trade-card-grid > * {
+  flex: 0 0 calc(25% - 18px); /* Adjust the percentage based on how many columns you want */
+  margin-bottom: 5px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .trade-card-grid > * {
+    flex: 0 0 calc(33.333% - 16px);
+  }
+}
+
+@media (max-width: 900px) {
+  .trade-card-grid > * {
+    flex: 0 0 calc(50% - 12px);
+  }
+}
+
+@media (max-width: 600px) {
+  .trade-card-grid > * {
+    flex: 0 0 100%;
+  }
+}
