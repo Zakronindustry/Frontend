@@ -1,5 +1,5 @@
-import React from "react";
-import { Box, AppBar, Avatar, Typography, IconButton } from "@mui/material";
+import React, { useState } from "react";
+import { Box, AppBar, Avatar, Typography, IconButton, InputBase } from "@mui/material";
 import {
   Notifications,
   CalendarToday,
@@ -10,6 +10,8 @@ import {
   Email,
 } from "@mui/icons-material";
 import { NavLink, useLocation } from "react-router-dom";
+import avatarImage from "./Avatar-5.png";
+ // Adjust the path to where the avatar image is located
 
 const IconButtonContainer = ({ to, children, isActive }) => (
   <NavLink to={to} style={{ textDecoration: "none" }}>
@@ -34,12 +36,17 @@ const IconButtonContainer = ({ to, children, isActive }) => (
 
 const TopBar = () => {
   const location = useLocation();
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  const handleSearchClick = () => {
+    setSearchOpen(!searchOpen);
+  };
 
   return (
     <AppBar
       position="fixed"
       sx={{
-        top: "30px",
+        top: "25px",
         left: "50%",
         transform: "translateX(-50%)",
         width: "1350px",
@@ -69,9 +76,9 @@ const TopBar = () => {
               background: "linear-gradient(180deg, #FCEBDE 0%, #F7D3BA 100%)",
               border: "2px solid #FFFFFF",
             }}
-          >
-            <img src="/api/placeholder/47/47" alt="User" />
-          </Avatar>
+            src={avatarImage}
+            alt="User"
+          />
           <Box sx={{ display: "flex", alignItems: "center", ml: "15px" }}>
             <Typography
               sx={{
@@ -95,29 +102,33 @@ const TopBar = () => {
             </Typography>
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", ml: "5px"}}>
-            <Box sx={{
+            <IconButton
+              onClick={() => alert("Notifications Clicked")} // Example action
+              sx={{
                 width: "34px",
                 height: "34px",
-                border: "1px solid #D8D8D8",
                 borderRadius: "50px",
                 ml: "10px",
                 px: "8px",
-              }}>
-              <Notifications fontSize="extra small" sx={{ color: "white" }} />
-            </Box>
-            <Box sx={{
+              }}
+            >
+              <Notifications fontSize="small" sx={{ color: "white" }} />
+            </IconButton>
+            <IconButton
+              onClick={() => alert("Calendar Clicked")} // Example action
+              sx={{
                 width: "34px",
                 height: "34px",
-                border: "1px solid #D8D8D8",
                 borderRadius: "50px",
                 ml: "10px",
                 px: "8px",
-              }}>
-              <CalendarToday fontSize="extra small" sx={{ color: "white" }} />
-            </Box>
+              }}
+            >
+              <CalendarToday fontSize="small" sx={{ color: "white" }} />
+            </IconButton>
             <Box
               sx={{
-                width: "235px",
+                width: searchOpen ? "300px" : "34px", // Expand when clicked
                 height: "34px",
                 border: "1px solid #D8D8D8",
                 borderRadius: "50px",
@@ -125,9 +136,20 @@ const TopBar = () => {
                 alignItems: "center",
                 ml: "13px",
                 px: "10px",
+                transition: "width 0.3s ease-in-out", // Smooth transition
+                cursor: "pointer",
               }}
+              onClick={handleSearchClick}
             >
-              <Search fontSize="small" sx={{ color: "white" }} />
+              {searchOpen ? (
+                <InputBase
+                  placeholder="Search..."
+                  sx={{ ml: 1, flex: 1, color: "white", fontSize: "14px" }}
+                  autoFocus
+                />
+              ) : (
+                <Search fontSize="small" sx={{ color: "white" }} />
+              )}
             </Box>
           </Box>
         </Box>
@@ -136,8 +158,8 @@ const TopBar = () => {
         <Box
           sx={{
             display: "flex",
-              alignItems: "center",
-              justifyContent: "flex-end",
+            alignItems: "center",
+            justifyContent: "flex-end",
           }}
         >
           <IconButtonContainer to="/" isActive={location.pathname === "/"}>

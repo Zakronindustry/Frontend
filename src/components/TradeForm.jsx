@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Box, Typography, TextField, Button, IconButton, Switch, FormControlLabel } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 
@@ -17,6 +17,9 @@ const InputField = ({ icon, placeholder, ...props }) => (
 );
 
 const TradeForm = ({ emotion, onClose, onSave }) => {
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+
   const getEmotionColor = () => {
     switch (emotion.toLowerCase()) {
       case 'anxious': return '#F5BCBB';
@@ -40,8 +43,9 @@ const TradeForm = ({ emotion, onClose, onSave }) => {
   };
 
   const handleSave = () => {
-    console.log("TradeForm save button clicked");
-    console.log("Emotion:", emotion);
+    const trimmedTitle = title.substring(0, 30);
+    const trimmedDescription = description.substring(0, 80);
+
     onSave({
       instrument: document.getElementById("instrument").value,
       strategy: document.getElementById("strategy").value,
@@ -51,8 +55,8 @@ const TradeForm = ({ emotion, onClose, onSave }) => {
       profitLoss: document.getElementById("profitLoss").value,
       date: document.getElementById("date").value,
       time: document.getElementById("time").value,
-      reason: document.getElementById("reason").value,
-      description: document.getElementById("description").value,
+      reason: trimmedTitle,
+      description: trimmedDescription,
     });
   };
 
@@ -97,8 +101,22 @@ const TradeForm = ({ emotion, onClose, onSave }) => {
           <InputField icon="⏰" placeholder="00:00:00" id="time" />
         </Box>
 
-        <InputField placeholder="Give it a title" multiline rows={1} id="reason" />
-        <InputField placeholder="Describe your trade..." multiline rows={5} id="description" />
+        <InputField 
+          placeholder="Note title..." 
+          multiline 
+          rows={1} 
+          id="reason"
+          value={title}
+          onChange={(e) => setTitle(e.target.value.substring(0, 30))}
+        />
+        <InputField 
+          placeholder="Describe your trade..." 
+          multiline 
+          rows={5} 
+          id="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value.substring(0, 80))}
+        />
 
         <Box sx={{ display: 'fix', justifyContent: 'space-between', mt: 2 }}>
           <IconButton sx={{ bgcolor: 'rgba(255,255,255,0.6)', borderRadius: '25px' }}>
