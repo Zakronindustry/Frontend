@@ -1,12 +1,13 @@
-import React from "react";
-import TopBar from "./TopBar";
-import Dashboard from "./Dashboard";
+import React from 'react';
+import TopBar from './TopBar';
 
-const Layout = () => {
+const Layout = ({ children }) => {
   return (
-    <div style={{ position: "relative", minHeight: "100vh" }}>
+    <div style={{ position: 'relative', minHeight: '100vh' }}>
       <TopBar />
-      <Dashboard /> {/* Render the Dashboard directly */}
+      <div style={{ paddingTop: '0px', paddingBottom: '0px' }}>
+        {children} {/* This will render the content of the active route */}
+      </div>
     </div>
   );
 };

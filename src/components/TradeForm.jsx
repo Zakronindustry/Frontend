@@ -19,6 +19,7 @@ const InputField = ({ icon, placeholder, ...props }) => (
 const TradeForm = ({ emotion, onClose, onSave }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [isPublic, setIsPublic] = useState(false); // State to track if the trade is public or private
 
   const getEmotionColor = () => {
     switch (emotion.toLowerCase()) {
@@ -57,6 +58,7 @@ const TradeForm = ({ emotion, onClose, onSave }) => {
       time: document.getElementById("time").value,
       reason: trimmedTitle,
       description: trimmedDescription,
+      isPublic, // Save the public/private state
     });
   };
 
@@ -66,8 +68,9 @@ const TradeForm = ({ emotion, onClose, onSave }) => {
       top: 0, 
       left: 0, 
       right: 0, 
-      bottom: 0, 
-      bgcolor: 'rgba(0, 0, 0, 0.6)', 
+      bottom: 0,
+      backgroundColor: 'rgba(255, 255, 255, 0.1)', // Slight white tint
+      backdropFilter: 'blur(10px)', // Blur effect 
       display: 'flex', 
       justifyContent: 'center', 
       alignItems: 'center', 
@@ -107,26 +110,20 @@ const TradeForm = ({ emotion, onClose, onSave }) => {
           rows={1} 
           id="reason"
           value={title}
-          onChange={(e) => setTitle(e.target.value.substring(0, 30))}
+          onChange={(e) => setTitle(e.target.value.substring(0, 35))}
         />
         <InputField 
           placeholder="Describe your trade..." 
           multiline 
-          rows={5} 
+          rows={9} 
           id="description"
           value={description}
-          onChange={(e) => setDescription(e.target.value.substring(0, 80))}
+          onChange={(e) => setDescription(e.target.value.substring(0, 500))}
         />
-
-        <Box sx={{ display: 'fix', justifyContent: 'space-between', mt: 2 }}>
-          <IconButton sx={{ bgcolor: 'rgba(255,255,255,0.6)', borderRadius: '25px' }}>
-            <span style={{ fontSize: '1.5rem' }}>📷</span>
-          </IconButton>
-        </Box>
 
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
           <FormControlLabel
-            control={<Switch color="primary" />}
+            control={<Switch color="primary" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} />}
             label="Make trade public"
           />
           <Button 

@@ -1,9 +1,10 @@
 import React from 'react';
 import { Card, CardContent, Typography, Box, Chip, IconButton } from '@mui/material';
 import ShareIcon from '@mui/icons-material/Share';
+import { Title } from '@mui/icons-material';
 
 const TradeCard = ({ color, title, symbol, change, price1, price2, quantity, description, time, tags, emoji, onClick }) => {
-  const truncatedDescription = description.length > 80 ? `${description.substring(0, 80)}...` : description;
+  const truncatedDescription = description.length > 60 ? `${description.substring(0, 60)}...` : description;
 
   return (
     <Card 

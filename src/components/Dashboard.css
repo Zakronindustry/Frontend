@@ -1,7 +1,14 @@
+/* Wrapper to ensure the grid is centered and takes up 90% of the screen width */
+.dashboard-container {
+  width: 90%;
+  margin: 0 auto; /* Center the container */
+}
+
 .trade-card-grid {
   display: flex;
   flex-wrap: wrap;
   gap: 23px;
+  justify-content: center; /* Center align the grid items */
 }
 
 .trade-card-grid > * {

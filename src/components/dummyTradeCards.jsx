@@ -81,13 +81,13 @@ export const dummyTradeCards = [
   },
   {
     color: '#F5BCBB',
-    title: 'Anxious During News Release',
+    title: 'Anxious News Release',
     symbol: 'USD/CAD',
     change: '-30 pips',
     price1: '1.2500',
     price2: '1.2470',
     quantity: '1.2 lots',
-    description: 'Entered a trade before a major news release and exited early due to anxiety.',
+    description: 'Entered a trade before a major news release and exited early due to...',
     time: '2 days ago',
     tags: ['#News', '#MorningSession'],
     emoji: '🤯'

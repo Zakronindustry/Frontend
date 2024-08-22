@@ -10,7 +10,8 @@ const TradeCardOverlay = ({ card, onClose }) => (
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)', // Slight white tint
+    backdropFilter: 'blur(10px)', // Blur effect
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
