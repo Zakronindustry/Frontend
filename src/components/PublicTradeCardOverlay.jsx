@@ -1,11 +1,12 @@
 import React from 'react';
-import { Box, Typography, Card, IconButton, Chip, Avatar, TextField, Button, } from '@mui/material';
+import { Box, Typography, Card, IconButton, Chip, Avatar, TextField, Button, Link as MuiLink } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import ThumbDownIcon from '@mui/icons-material/ThumbDown';
 import ShareIcon from '@mui/icons-material/Share';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import SendIcon from '@mui/icons-material/Send';
+import { Link } from 'react-router-dom'; // Import Link from react-router-dom
 
 const PublicTradeCardOverlay = ({ card, onClose }) => (
   <Box sx={{
@@ -52,7 +53,13 @@ const PublicTradeCardOverlay = ({ card, onClose }) => (
 
         <Typography variant="subtitle1" sx={{ mb: 1 }}>
           <Typography component="span" sx={{ fontWeight: 'light' }}>By </Typography>
-          <Typography component="span" sx={{ fontWeight: 'bold' }}>{card.userId}</Typography>
+          <MuiLink 
+            component={Link} 
+            to={`/user/${card.userId}`} 
+            sx={{ fontWeight: 'bold', color: 'inherit', textDecoration: 'none' }}
+          >
+            {card.userId}
+          </MuiLink>
         </Typography>
 
         <Typography variant="h5" sx={{ mb: 2 }}>

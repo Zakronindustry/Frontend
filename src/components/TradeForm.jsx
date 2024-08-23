@@ -16,9 +16,11 @@ const InputField = ({ icon, placeholder, ...props }) => (
   </Box>
 );
 
-const TradeForm = ({ emotion, onClose, onSave }) => {
+const TradeForm = ({ emotion, onClose, onSave, onAddStrategy }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [date, setDate] = useState('');  // State for Date input
+  const [time, setTime] = useState('');  // State for Time input
   const [isPublic, setIsPublic] = useState(false); // State to track if the trade is public or private
 
   const getEmotionColor = () => {
@@ -43,22 +45,42 @@ const TradeForm = ({ emotion, onClose, onSave }) => {
     }
   };
 
+  const determineSessionTag = (time) => {
+    const hours = parseInt(time.split(':')[0], 10);
+
+    if (hours >= 4 && hours < 9) return '#MorningSession';
+    if (hours >= 9 && hours < 12) return '#MidDaySession';
+    if (hours >= 12 && hours < 14) return '#NoonSession';
+    if (hours >= 14 && hours < 16) return '#AfternoonSession';
+    if (hours >= 16 && hours < 20) return '#EveningSession';
+
+    return '#OtherSession'; // Default or for times outside these ranges
+  };
+
   const handleSave = () => {
     const trimmedTitle = title.substring(0, 30);
     const trimmedDescription = description.substring(0, 80);
 
+    const strategy = document.getElementById("strategy").value;
+    const sessionTag = determineSessionTag(time);
+
+    const tags = [`#${strategy}`, sessionTag];
+
+    onAddStrategy(strategy); // Add the strategy to the list
+
     onSave({
       instrument: document.getElementById("instrument").value,
-      strategy: document.getElementById("strategy").value,
+      strategy,
       entryPoint: document.getElementById("entryPoint").value,
       exitPoint: document.getElementById("exitPoint").value,
       positionSize: document.getElementById("positionSize").value,
       profitLoss: document.getElementById("profitLoss").value,
-      date: document.getElementById("date").value,
-      time: document.getElementById("time").value,
+      date,
+      time,
       reason: trimmedTitle,
       description: trimmedDescription,
       isPublic, // Save the public/private state
+      tags, // Save the generated tags
     });
   };
 
@@ -100,8 +122,22 @@ const TradeForm = ({ emotion, onClose, onSave }) => {
           <InputField icon="📉" placeholder="Exit Point" id="exitPoint" />
           <InputField icon="💼" placeholder="Position Size" id="positionSize" />
           <InputField icon="💰" placeholder="Profit/Loss" id="profitLoss" />
-          <InputField icon="📅" placeholder="DD-MM-YYYY" id="date" />
-          <InputField icon="⏰" placeholder="00:00:00" id="time" />
+          <InputField
+            icon="📅"
+            placeholder="DD-MM-YYYY"
+            id="date"
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+          />
+          <InputField
+            icon="⏰"
+            placeholder="00:00:00"
+            id="time"
+            type="time"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+          />
         </Box>
 
         <InputField 

@@ -12,7 +12,8 @@ export const dummyTradeCards = [
     description: 'Market moved against me and hit my stop loss. Felt frustrated.',
     time: '5 days ago',
     tags: ['#StopLoss', '#MorningSession'],
-    emoji: '😠'
+    emoji: '😠',
+    session: 'Morning'
   },
   {
     color: '#F5BCBB',
@@ -25,7 +26,8 @@ export const dummyTradeCards = [
     description: 'Entered ahead of FOMC announcement, felt anxious.',
     time: '3 days ago',
     tags: ['#FOMC', '#EveningSession'],
-    emoji: '🤯'
+    emoji: '🤯',
+    session: 'Evening'
   },
   {
     color: '#D0E9BC',
@@ -38,7 +40,8 @@ export const dummyTradeCards = [
     description: 'Followed my plan calmly and took profit at the target.',
     time: '1 week ago',
     tags: ['#LongPosition', '#AfternoonSession'],
-    emoji: '😊'
+    emoji: '😊',
+    session: 'Afternoon'
   },
   {
     color: '#B0DCF0',
@@ -51,7 +54,8 @@ export const dummyTradeCards = [
     description: 'Confidently entered a breakout trade and secured profit.',
     time: '2 days ago',
     tags: ['#Breakout', '#MorningSession'],
-    emoji: '😎'
+    emoji: '😎',
+    session: 'Morning'
   },
   {
     color: '#F5E0B2',
@@ -64,7 +68,8 @@ export const dummyTradeCards = [
     description: 'Held the position too long, hoping for more gains. Lost profits.',
     time: '1 week ago',
     tags: ['#Greedy', '#AfternoonSession'],
-    emoji: '🤑'
+    emoji: '🤑',
+    session: 'Afternoon'
   },
   {
     color: '#C1BCBC',
@@ -77,7 +82,8 @@ export const dummyTradeCards = [
     description: 'Frustrated as the market stayed range-bound and hit my stop loss.',
     time: '4 days ago',
     tags: ['#RangeBound', '#EveningSession'],
-    emoji: '😠'
+    emoji: '😠',
+    session: 'Evening'
   },
   {
     color: '#F5BCBB',
@@ -90,7 +96,8 @@ export const dummyTradeCards = [
     description: 'Entered a trade before a major news release and exited early due to...',
     time: '2 days ago',
     tags: ['#News', '#MorningSession'],
-    emoji: '🤯'
+    emoji: '🤯',
+    session: 'Morning'
   },
   {
     color: '#D0E9BC',
@@ -103,7 +110,8 @@ export const dummyTradeCards = [
     description: 'Spotted a reversal and calmly entered, exiting with profit.',
     time: '6 days ago',
     tags: ['#Reversal', '#AfternoonSession'],
-    emoji: '😊'
+    emoji: '😊',
+    session: 'Afternoon'
   },
   {
     color: '#B0DCF0',
@@ -116,6 +124,7 @@ export const dummyTradeCards = [
     description: 'Entered a swing trade confidently and took profit at resistance.',
     time: '3 days ago',
     tags: ['#SwingTrade', '#EveningSession'],
-    emoji: '😎'
+    emoji: '😎',
+    session: 'Evening'
   }
 ];

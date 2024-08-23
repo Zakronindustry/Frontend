@@ -1,44 +1,45 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from "react";
 import {
   Box,
   Typography,
   IconButton,
-  Checkbox,
   FormGroup,
   FormControlLabel,
+  Radio,
+  RadioGroup,
   Select,
   MenuItem,
-  InputLabel,
-  FormControl,
+  Button,
 } from "@mui/material";
-import { Close, FilterList } from "@mui/icons-material";
+import { Close } from "@mui/icons-material";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
-const FilterOverlay = ({ open, onClose, onApply }) => {
+const FilterOverlay = ({ open, onClose, onApply, onReset, strategies = [] }) => {
   const [emotions, setEmotions] = useState([]);
-  const [symbols, setSymbols] = useState([]);
-  const [sessions, setSessions] = useState([]);
-
-  useEffect(() => {
-    console.log("FilterOverlay open state:", open);
-  }, [open]);
+  const [instrument, setInstrument] = useState("");
+  const [strategy, setStrategy] = useState("");
+  const [session, setSession] = useState("");
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
 
   const emotionOptions = [
     { emoji: "😠", color: "#C1BCBC" },
-    { emoji: "🤯", color: "#F5BCBB" },
-    { emoji: "😊", color: "#D0E9BC" },
-    { emoji: "😎", color: "#B0DCF0" },
-    { emoji: "🤑", color: "#F5E0B2" },
+    { emoji: "🤯", color: "#FFD6E5" },
+    { emoji: "😊", color: "#D5F0C1" },
+    { emoji: "😎", color: "#C3E7FF" },
+    { emoji: "🤑", color: "#FFD6A5" },
   ];
 
   const sessionOptions = [
-    "4AM - 9AM",
-    "9AM - 12PM",
-    "12PM - 2PM",
-    "2PM - 4PM",
-    "4PM - 8PM",
+    "4 AM - 9 AM: Pre-market",
+    "9 AM - 12 PM: Morning",
+    "12 PM - 2 PM: Midday",
+    "2 PM - 4 PM: Afternoon",
+    "4 PM - 8 PM: After-hours",
   ];
 
-  const symbolOptions = ["AAPL", "GOOGL", "MSFT", "AMZN", "FB"];
+  const instrumentOptions = ["AAPL", "GOOGL", "MSFT", "AMZN", "FB"];
 
   const handleEmotionChange = (emoji) => {
     setEmotions(
@@ -48,21 +49,37 @@ const FilterOverlay = ({ open, onClose, onApply }) => {
     );
   };
 
-  const handleSymbolChange = (event) => {
-    setSymbols(event.target.value);
-  };
-
-  const handleSessionChange = (session) => {
-    setSessions(
-      sessions.includes(session)
-        ? sessions.filter((s) => s !== session)
-        : [...sessions, session]
-    );
+  const handleReset = () => {
+    setEmotions([]);
+    setInstrument("");
+    setStrategy("");
+    setSession("");
+    setStartDate(null);
+    setEndDate(null);
+    if (onReset) onReset();
   };
 
   const handleApply = () => {
-    onApply({ emotions, symbols, sessions });
-    onClose();
+    const filters = {
+      emotions,
+      instrument,
+      strategy,
+      session,
+      dateRange: startDate && endDate ? { startDate, endDate } : null,
+    };
+
+    if (
+      emotions.length > 0 ||
+      instrument ||
+      strategy ||
+      session ||
+      (startDate && endDate)
+    ) {
+      onApply(filters);
+      onClose();
+    } else {
+      alert("Please select at least one filter criterion.");
+    }
   };
 
   if (!open) return null;
@@ -73,92 +90,203 @@ const FilterOverlay = ({ open, onClose, onApply }) => {
         position: "fixed",
         top: 0,
         left: 0,
-        width: "100%",
-        height: "100%",
-        backgroundColor: 'rgba(255, 255, 255, 0.1)', // Slight white tint
-          backdropFilter: 'blur(10px)', // Blur effect 
-        zIndex: 1300,
+        right: 0,
+        bottom: 0,
+        backgroundColor: "rgba(255, 255, 255, 0.1)",
+        backdropFilter: "blur(10px)",
         display: "flex",
-        alignItems: "center",
         justifyContent: "center",
+        alignItems: "center",
+        zIndex: 1300,
       }}
     >
       <Box
         sx={{
-          width: "80%",
-          maxWidth: 600,
-          bgcolor: "white",
-          borderRadius: 2,
-          p: 3,
+          width: "90%",
+          maxWidth: 400,
+          maxHeight: "95vh",
+          bgcolor: "#FFF8F0",
+          borderRadius: 6,
           display: "flex",
           flexDirection: "column",
-          gap: 2,
         }}
       >
-        <Typography variant="h6">Filter Options (Debug)</Typography>
-        <Typography>Open state: {open.toString()}</Typography>
-        <Typography>Emotions: {emotions.join(', ')}</Typography>
-        <Typography>Symbols: {symbols.join(', ')}</Typography>
-        <Typography>Sessions: {sessions.join(', ')}</Typography>
+        <Box sx={{ p: 3, borderBottom: "1px solid rgba(0, 0, 0, 0.12)" }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+              Filter
+            </Typography>
+            <IconButton onClick={onClose} size="small">
+              <Close />
+            </IconButton>
+          </Box>
+        </Box>
 
-        <FormGroup>
-          <Typography variant="subtitle1">Emotions</Typography>
-          <Box sx={{ display: "flex", gap: 1 }}>
+        <Box sx={{ flexGrow: 1, overflowY: "auto", p: 3 }}>
+          <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
             {emotionOptions.map(({ emoji, color }) => (
               <IconButton
                 key={emoji}
                 onClick={() => handleEmotionChange(emoji)}
                 sx={{
+                  width: 50,
+                  height: 50,
                   bgcolor: emotions.includes(emoji) ? color : "transparent",
-                  border: `1px solid ${color}`,
+                  border: `2px solid ${color}`,
+                  borderRadius: "50%",
+                  fontSize: "1.5rem",
                 }}
               >
                 {emoji}
               </IconButton>
             ))}
           </Box>
-        </FormGroup>
 
-        <FormControl fullWidth>
-          <InputLabel>Symbols</InputLabel>
           <Select
-            multiple
-            value={symbols}
-            onChange={handleSymbolChange}
-            renderValue={(selected) => selected.join(", ")}
+            value={instrument}
+            onChange={(e) => setInstrument(e.target.value)}
+            displayEmpty
+            fullWidth
+            sx={{
+              bgcolor: "white",
+              borderRadius: 6,
+              mb: 2,
+              "& .MuiOutlinedInput-notchedOutline": { border: "none" },
+            }}
           >
-            {symbolOptions.map((symbol) => (
-              <MenuItem key={symbol} value={symbol}>
-                <Checkbox checked={symbols.indexOf(symbol) > -1} />
-                <Typography>{symbol}</Typography>
+            <MenuItem disabled value="">
+              <span style={{ color: "#aaa" }}>🔍 Instrument</span>
+            </MenuItem>
+            {instrumentOptions.map((option) => (
+              <MenuItem key={option} value={option}>
+                {option}
               </MenuItem>
             ))}
           </Select>
-        </FormControl>
 
-        <FormGroup>
-          <Typography variant="subtitle1">Sessions</Typography>
-          {sessionOptions.map((session) => (
-            <FormControlLabel
-              key={session}
-              control={
-                <Checkbox
-                  checked={sessions.includes(session)}
-                  onChange={() => handleSessionChange(session)}
+          <Select
+            value={strategy}
+            onChange={(e) => setStrategy(e.target.value)}
+            displayEmpty
+            fullWidth
+            sx={{
+              bgcolor: "white",
+              borderRadius: 6,
+              mb: 0.5,
+              "& .MuiOutlinedInput-notchedOutline": { border: "none" },
+            }}
+          >
+            <MenuItem disabled value="">
+              <span style={{ color: "#aaa" }}>🚀 Trade strategy</span>
+            </MenuItem>
+            {strategies.map((option) => (
+              <MenuItem key={option} value={option}>
+                {option}
+              </MenuItem>
+            ))}
+          </Select>
+
+          <Typography
+            variant="subtitle1"
+            sx={{ fontWeight: "bold", mt: 2, mb: 0.5 }}
+          >
+            Sessions
+          </Typography>
+          <RadioGroup value={session} onChange={(e) => setSession(e.target.value)}>
+            {sessionOptions.map((option) => (
+              <FormControlLabel
+                key={option}
+                value={option}
+                control={
+                  <Radio sx={{ "&.Mui-checked": { color: "black" } }} />
+                }
+                label={option}
+              />
+            ))}
+          </RadioGroup>
+
+          <Typography
+            variant="subtitle1"
+            sx={{ fontWeight: "bold", mt: 1, mb: 2 }}
+          >
+            Date Range
+          </Typography>
+          <Box sx={{ display: "flex", gap: 2 }}>
+            <DatePicker
+              selected={startDate}
+              onChange={(date) => setStartDate(date)}
+              selectsStart
+              startDate={startDate}
+              endDate={endDate}
+              placeholderText="Start Date"
+              customInput={
+                <input
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    border: "none",
+                    borderRadius: "20px",
+                    backgroundColor: "white",
+                  }}
                 />
               }
-              label={session}
             />
-          ))}
-        </FormGroup>
+            <DatePicker
+              selected={endDate}
+              onChange={(date) => setEndDate(date)}
+              selectsEnd
+              startDate={startDate}
+              endDate={endDate}
+              minDate={startDate}
+              placeholderText="End Date"
+              customInput={
+                <input
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    border: "none",
+                    borderRadius: "20px",
+                    backgroundColor: "white",
+                  }}
+                />
+              }
+            />
+          </Box>
+        </Box>
 
-        <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, mt: 2 }}>
-          <IconButton onClick={onClose}>
-            <Close />
-          </IconButton>
-          <IconButton onClick={handleApply} color="primary">
-            <FilterList />
-          </IconButton>
+        <Box sx={{ p: 3, borderTop: "1px solid rgba(0, 0, 0, 0.12)" }}>
+          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+            <Button
+              onClick={handleReset}
+              sx={{
+                bgcolor: "#E0E0E0",
+                color: "black",
+                borderRadius: 6,
+                px: 4,
+                "&:hover": { bgcolor: "#D0D0D0" },
+              }}
+            >
+              Reset
+            </Button>
+            <Button
+              onClick={handleApply}
+              sx={{
+                bgcolor: "black",
+                color: "white",
+                borderRadius: 6,
+                px: 4,
+                "&:hover": { bgcolor: "#333" },
+              }}
+            >
+              Apply
+            </Button>
+          </Box>
         </Box>
       </Box>
     </Box>

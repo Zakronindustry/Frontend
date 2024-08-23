@@ -91,33 +91,28 @@ const SearchOverlay = ({ open, onClose }) => (
   </Box>
 );
 
-const TopBar = () => {
+const TopBar = ({ onApplyFilters, strategies }) => {  // Accept the strategies prop
   const location = useLocation();
   const [searchOpen, setSearchOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [filters, setFilters] = useState({});
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
 
   const handleSearchClick = () => {
-    console.log("Search button clicked");
     setSearchOpen(true);
   };
 
   const handleSearchClose = () => {
-    console.log("Search overlay closed");
     setSearchOpen(false);
   };
 
   const handleFilterClick = () => {
-    console.log("Filter button clicked");
     setFilterOpen(true);
   };
 
   const handleFilterClose = () => {
-    console.log("Filter overlay closed");
     setFilterOpen(false);
   };
 
@@ -125,8 +120,16 @@ const TopBar = () => {
 
   const handleApplyFilters = (newFilters) => {
     console.log("Filters applied:", newFilters);
-    setFilters(newFilters);
+    if (onApplyFilters) { // Ensure that onApplyFilters is available
+      onApplyFilters(newFilters);  // Pass filters up to App.jsx
+    }
     setFilterOpen(false);
+    handleFilterClose();  // Close the overlay after applying filters
+  };
+
+  const handleResetFilters = () => {
+    onApplyFilters({ emotions: [], symbols: [], sessions: [], strategies: [] });
+    handleFilterClose();
   };
 
   const menuItems = [
@@ -251,6 +254,8 @@ const TopBar = () => {
         open={filterOpen} 
         onClose={handleFilterClose} 
         onApply={handleApplyFilters}
+        onReset={handleResetFilters}
+        strategies={strategies} // Pass strategies to the FilterOverlay
       />
 
       <Drawer anchor="right" open={menuOpen} onClose={handleMenuToggle}>

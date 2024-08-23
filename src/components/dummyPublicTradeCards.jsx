@@ -17,6 +17,7 @@ export const dummyPublicTradeCards = [
     comments: 10,
     userId: 'User123',
     isPublic: true,
+    session: 'Morning'
   },
   {
     color: '#B0DCF0',
@@ -34,6 +35,7 @@ export const dummyPublicTradeCards = [
     comments: 8,
     userId: 'TraderJoe',
     isPublic: true,
+    session: 'Evening'
   },
   {
     color: '#F5BCBB',
@@ -51,6 +53,7 @@ export const dummyPublicTradeCards = [
     comments: 12,
     userId: 'ForexGuru',
     isPublic: true,
+    session: 'Morning'
   },
   {
     color: '#C1BCBC',
@@ -68,6 +71,7 @@ export const dummyPublicTradeCards = [
     comments: 4,
     userId: 'AngryTrader',
     isPublic: true,
+    session: 'Morning'
   },
   {
     color: '#F5E0B2',
@@ -85,6 +89,7 @@ export const dummyPublicTradeCards = [
     comments: 7,
     userId: 'StockHawk',
     isPublic: true,
+    session: 'Evening'
   },
   {
     color: '#D0E9BC',
@@ -102,6 +107,7 @@ export const dummyPublicTradeCards = [
     comments: 15,
     userId: 'CryptoKing',
     isPublic: true,
+    session: 'Morning'
   },
   {
     color: '#B0DCF0',
@@ -119,6 +125,7 @@ export const dummyPublicTradeCards = [
     comments: 9,
     userId: 'InvestGuru',
     isPublic: true,
+    session: 'Afternoon'
   },
   {
     color: '#F5BCBB',
@@ -136,6 +143,7 @@ export const dummyPublicTradeCards = [
     comments: 6,
     userId: 'MarketWatcher',
     isPublic: true,
+    session: 'Afternoon'
   },
   {
     color: '#C1BCBC',
@@ -153,6 +161,7 @@ export const dummyPublicTradeCards = [
     comments: 5,
     userId: 'DayTraderPro',
     isPublic: true,
+    session: 'Morning'
   },
   {
     color: '#F5E0B2',
@@ -170,6 +179,7 @@ export const dummyPublicTradeCards = [
     comments: 12,
     userId: 'CryptoBeliever',
     isPublic: true,
+    session: 'Evening'
   },
   {
     color: '#D0E9BC',
@@ -187,6 +197,7 @@ export const dummyPublicTradeCards = [
     comments: 10,
     userId: 'ScalpMaster',
     isPublic: true,
+    session: 'Morning'
   },
   {
     color: '#B0DCF0',
@@ -204,5 +215,6 @@ export const dummyPublicTradeCards = [
     comments: 13,
     userId: 'TechTrader',
     isPublic: true,
+    session: 'Afternoon'
   },
 ];
