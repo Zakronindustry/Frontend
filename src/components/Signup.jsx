@@ -1,30 +1,49 @@
-import React, { useState } from "react";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "./firebase";
-import { createUser } from "./firebaseCrud";
+import React, { useState } from 'react';
+import { Box, TextField, Button, Typography, Link } from '@mui/material';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../firebase';
+import { useNavigate } from 'react-router-dom';
 
-const Signup = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [userId, setUserId] = useState("");
+const SignUp = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
-  const handleSignup = async () => {
+  const handleSignUp = async () => {
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      // Add user to Firestore
-      await createUser({ userId: user.uid, email, profileAge: new Date() });
-
-      console.log("User signed up and added to Firestore");
-    } catch (e) {
-      console.error("Error during signup: ", e);
+      await createUserWithEmailAndPassword(auth, email, password);
+      navigate('/'); // Redirect to dashboard after successful signup
+    } catch (error) {
+      setError(error.message);
     }
   };
 
   return (
-    // Your form JSX here
+    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 5 }}>
+      <Typography variant="h4" gutterBottom>Sign Up</Typography>
+      {error && <Typography color="error">{error}</Typography>}
+      <TextField
+        label="Email"
+        variant="outlined"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        sx={{ mb: 2, width: '300px' }}
+      />
+      <TextField
+        label="Password"
+        variant="outlined"
+        type="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        sx={{ mb: 2, width: '300px' }}
+      />
+      <Button variant="contained" onClick={handleSignUp} sx={{ width: '300px', mb: 2 }}>Sign Up</Button>
+      <Link href="/login" variant="body2">
+        Already have an account? Log in
+      </Link>
+    </Box>
   );
 };
 
-export default Signup;
+export default SignUp;

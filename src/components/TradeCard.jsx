@@ -2,9 +2,9 @@ import React from 'react';
 import { Card, CardContent, Typography, Box, Chip, IconButton } from '@mui/material';
 import ShareIcon from '@mui/icons-material/Share';
 
-const TradeCard = ({ color, title, symbol, change, price1, price2, quantity, description, time, tags, emoji, onClick }) => {
-  // Truncate the description if it's too long
-  const truncatedDescription = description.length > 60 ? `${description.substring(0, 60)}...` : description;
+const TradeCard = ({ color, title, symbol, change, price1, price2, quantity, description, time, tags = [], emoji, onClick }) => {
+  // Ensure that description is safely accessed and fallback to an empty string if undefined
+  const truncatedDescription = description && description.length > 60 ? `${description.substring(0, 60)}...` : description || '';
 
   return (
     <Card 
@@ -21,9 +21,8 @@ const TradeCard = ({ color, title, symbol, change, price1, price2, quantity, des
         cursor: 'pointer',
         position: 'relative', // Add relative positioning to the card container
       }}
-      onClick={onClick} // Trigger the passed onClick event when the card is clicked
+      onClick={onClick} // Add onClick event
     >
-      {/* Share Button */}
       <IconButton 
         size="small" 
         sx={{ 
@@ -39,7 +38,6 @@ const TradeCard = ({ color, title, symbol, change, price1, price2, quantity, des
         <ShareIcon fontSize="small" />
       </IconButton>
 
-      {/* Card Content */}
       <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', position: 'relative', pt: 1 }}>
         <Box sx={{ top: 15, left: 10 }}>
           <Typography 
@@ -92,7 +90,8 @@ const TradeCard = ({ color, title, symbol, change, price1, price2, quantity, des
         <Box sx={{ mt: 'auto' }}>
           <Typography variant="caption" sx={{ display: 'block', mb: 1, color: 'text.secondary' }}>{time}</Typography>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-            {tags.map((tag, index) => (
+            {/* Ensure tags is an array and safely map over it */}
+            {tags.length > 0 && tags.map((tag, index) => (
               <Chip 
                 key={index} 
                 label={tag} 

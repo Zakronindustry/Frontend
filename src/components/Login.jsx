@@ -1,47 +1,48 @@
-import React, { useRef, useState } from "react";
-import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
+import { Box, TextField, Button, Typography, Link } from '@mui/material';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../firebase';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
-  const emailRef = useRef();
-  const passwordRef = useRef();
-  const { login } = useAuth();
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate(); // Replaces useHistory
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
+  const handleLogin = async () => {
     try {
-      setError("");
-      setLoading(true);
-      await login(emailRef.current.value, passwordRef.current.value);
-      navigate("/dashboard"); // Redirect to dashboard after login
-    } catch {
-      setError("Failed to sign in");
+      await signInWithEmailAndPassword(auth, email, password);
+      navigate('/'); // Redirect to dashboard after successful login
+    } catch (error) {
+      setError(error.message);
     }
-
-    setLoading(false);
   };
 
   return (
-    <div>
-      <h2>Login</h2>
-      {error && <p>{error}</p>}
-      <form onSubmit={handleSubmit}>
-        <input type="email" ref={emailRef} placeholder="Email" required />
-        <input
-          type="password"
-          ref={passwordRef}
-          placeholder="Password"
-          required
-        />
-        <button disabled={loading} type="submit">
-          Log In
-        </button>
-      </form>
-    </div>
+    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 5 }}>
+      <Typography variant="h4" gutterBottom>Login</Typography>
+      {error && <Typography color="error">{error}</Typography>}
+      <TextField
+        label="Email"
+        variant="outlined"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        sx={{ mb: 2, width: '300px' }}
+      />
+      <TextField
+        label="Password"
+        variant="outlined"
+        type="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        sx={{ mb: 2, width: '300px' }}
+      />
+      <Button variant="contained" onClick={handleLogin} sx={{ width: '300px', mb: 2 }}>Login</Button>
+      <Link href="/signup" variant="body2">
+        Don't have an account? Sign up
+      </Link>
+    </Box>
   );
 };
 

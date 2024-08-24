@@ -4,6 +4,8 @@ import TopBar from './components/TopBar';
 import Dashboard from './components/Dashboard';
 import CommunityPage from './components/Community';
 import UserProfile from './UserProfile';
+import SignUp from "./components/Signup";
+import Login from "./components/Login";    // Import Login component
 import { getUserProfile } from "./firebaseRealtimeCrud";
 import { auth } from './firebase';  // Import Firebase auth
 
@@ -44,6 +46,8 @@ const App = () => {
         <Route path="/" element={<Dashboard filters={filters} />} />
         <Route path="/community" element={<CommunityPage filters={filters} />} />
         <Route path="/user/:userId" element={<UserProfile />} /> {/* Add route for user profile */}
+        <Route path="/signup" element={<SignUp />} /> {/* Add SignUp route */}
+        <Route path="/login" element={<Login />} />   {/* Add Login route */}
       </Routes>
     </Router>
   );

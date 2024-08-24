@@ -1,6 +1,55 @@
 import { ref, set, get, push, update, remove } from "firebase/database";
 import { realtimeDb } from "./firebase"; // Import the Realtime Database instance
 
+// Function to add a new notification for a user
+export const addNotification = async (userId, notificationData) => {
+  try {
+    const newNotificationRef = push(ref(realtimeDb, `notifications/${userId}`));
+    await set(newNotificationRef, notificationData);
+    console.log("Notification added successfully");
+  } catch (error) {
+    console.error("Error adding notification: ", error);
+  }
+};
+
+// Function to get notifications for a user
+export const getNotifications = async (userId) => {
+  try {
+    const notificationsRef = ref(realtimeDb, `notifications/${userId}`);
+    const snapshot = await get(notificationsRef);
+    if (snapshot.exists()) {
+      return snapshot.val();
+    } else {
+      console.log("No notifications available");
+      return {};
+    }
+  } catch (error) {
+    console.error("Error fetching notifications: ", error);
+  }
+};
+
+// Function to mark a notification as read
+export const markNotificationAsRead = async (userId, notificationId) => {
+  try {
+    const notificationRef = ref(realtimeDb, `notifications/${userId}/${notificationId}`);
+    await update(notificationRef, { read: true });
+    console.log("Notification marked as read");
+  } catch (error) {
+    console.error("Error marking notification as read: ", error);
+  }
+};
+
+// Function to delete a notification
+export const deleteNotification = async (userId, notificationId) => {
+  try {
+    const notificationRef = ref(realtimeDb, `notifications/${userId}/${notificationId}`);
+    await remove(notificationRef);
+    console.log("Notification deleted successfully");
+  } catch (error) {
+    console.error("Error deleting notification: ", error);
+  }
+};
+
 // Function to create a new public trade
 export const createPublicTrade = async (tradeData) => {
   try {

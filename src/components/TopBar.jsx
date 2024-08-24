@@ -8,7 +8,7 @@ import {
   InputBase,
   useMediaQuery,
   useTheme,
-  Drawer,
+  Dialog,
   List,
   ListItem,
   ListItemIcon,
@@ -26,8 +26,9 @@ import {
   Close,
 } from "@mui/icons-material";
 import { NavLink, useLocation } from "react-router-dom";
-import { getUserProfile } from '../firebaseRealtimeCrud';
 import FilterOverlay from "./FilterOverlay";
+import NotificationOverlay from "./NotificationOverlay"; // Import the notification overlay component
+import { getNotifications, markNotificationAsRead } from "../firebaseRealtimeCrud"; // Import Firebase functions
 
 const IconButtonContainer = ({ to, children, isActive }) => (
   <NavLink to={to} style={{ textDecoration: "none" }}>
@@ -91,14 +92,81 @@ const SearchOverlay = ({ open, onClose }) => (
   </Box>
 );
 
+const CenteredMenuOverlay = ({ open, onClose, menuItems }) => (
+  <Dialog
+    open={open}
+    onClose={onClose}
+    sx={{
+      "& .MuiBackdrop-root": {
+        backgroundColor: "rgba(255, 255, 255, 0.1)",
+        backdropFilter: "blur(10px)",
+        WebkitBackdropFilter: "blur(10px)",
+      },
+      "& .MuiDialog-paper": {
+        borderRadius: "20px",
+        backgroundColor: "rgba(255, 255, 255, 0.95)",
+        padding: "20px",
+        maxWidth: "300px",
+        width: "100%",
+        textAlign: "center",
+      },
+    }}
+  >
+    <List>
+      {menuItems.map((item) => (
+        <ListItem
+          button
+          key={item.path}
+          component={NavLink}
+          to={item.path}
+          onClick={onClose}
+        >
+          <ListItemIcon>{item.icon}</ListItemIcon>
+          <ListItemText primary={item.text} />
+        </ListItem>
+      ))}
+    </List>
+  </Dialog>
+);
+
 const TopBar = ({ user, onApplyFilters, strategies }) => {
   const location = useLocation();
   const [searchOpen, setSearchOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [notificationOpen, setNotificationOpen] = useState(false); // State for notification overlay
+  const [notifications, setNotifications] = useState([]); // State for notifications
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
+
+  useEffect(() => {
+    if (notificationOpen && user?.userId) {
+      fetchNotifications();
+    }
+  }, [notificationOpen]);
+
+  const fetchNotifications = async () => {
+    const fetchedNotifications = await getNotifications(user.userId);
+    setNotifications(Object.entries(fetchedNotifications || {}).map(([id, data]) => ({ id, ...data })));
+  };
+
+  const handleNotificationClick = () => {
+    setNotificationOpen(true);
+  };
+
+  const handleNotificationClose = () => {
+    setNotificationOpen(false);
+  };
+
+  const handleMarkAsRead = async (notificationId) => {
+    if (user?.userId) {
+      await markNotificationAsRead(user.userId, notificationId);
+      setNotifications(notifications.map(notification => 
+        notification.id === notificationId ? { ...notification, read: true } : notification
+      ));
+    }
+  };
 
   const handleSearchClick = () => {
     setSearchOpen(true);
@@ -133,7 +201,7 @@ const TopBar = ({ user, onApplyFilters, strategies }) => {
   };
 
   const menuItems = [
-    { icon: <NoteAlt />, text: "Notes", path: "/" },
+    { icon: <NoteAlt />, text: "My Notes", path: "/" },
     { icon: <ShowChart />, text: "Analytics", path: "/analytics" },
     { icon: <Public />, text: "Community", path: "/community" },
     { icon: <Email />, text: "Messages", path: "/messages" },
@@ -188,7 +256,7 @@ const TopBar = ({ user, onApplyFilters, strategies }) => {
         <Box
           sx={{
             display: "flex",
-            justifyContent: "space-between",
+            justifyContent: "flex-start", // Align items to the left
             alignItems: "center",
             height: "100%",
             px: "10px",
@@ -205,11 +273,11 @@ const TopBar = ({ user, onApplyFilters, strategies }) => {
               src={user?.avatar || "avatar"}
               alt={user?.userId || "User"}
             />
-            {!isMobile && (
+            {!isMobile && !isTablet && (
               <Box sx={{ display: "flex", alignItems: "center", ml: "15px" }}>
                 <Typography
                   sx={{
-                    fontSize: "22px",
+                    fontSize: isMobile ? "18px" : "22px",
                     fontFamily: "Montserrat",
                     color: "#FFFFFF",
                     fontWeight: 600,
@@ -219,19 +287,19 @@ const TopBar = ({ user, onApplyFilters, strategies }) => {
                 </Typography>
               </Box>
             )}
-            <Box sx={{ display: "flex", alignItems: "center", ml: 2, gap: 1 }}>
-              <IconButton sx={buttonStyle}>
-                <Notifications />
-              </IconButton>
-              <IconButton onClick={handleSearchClick} sx={buttonStyle}>
-                <Search />
-              </IconButton>
-              <IconButton onClick={handleFilterClick} sx={buttonStyle}>
-                <FilterList />
-              </IconButton>
-            </Box>
           </Box>
-          <Box sx={{ display: "flex", alignItems: "center" }}>
+          <Box sx={{ display: "flex", alignItems: "center", ml: 2, gap: 1 }}>
+            <IconButton sx={buttonStyle} onClick={handleNotificationClick}>
+              <Notifications />
+            </IconButton>
+            <IconButton onClick={handleSearchClick} sx={buttonStyle}>
+              <Search />
+            </IconButton>
+            <IconButton onClick={handleFilterClick} sx={buttonStyle}>
+              <FilterList />
+            </IconButton>
+          </Box>
+          <Box sx={{ display: "flex", alignItems: "center", marginLeft: "auto" }}>
             {(isMobile || isTablet) && (
               <IconButton onClick={handleMenuToggle} sx={buttonStyle}>
                 <Menu />
@@ -263,22 +331,14 @@ const TopBar = ({ user, onApplyFilters, strategies }) => {
         strategies={strategies} 
       />
 
-      <Drawer anchor="right" open={menuOpen} onClose={handleMenuToggle}>
-        <List>
-          {menuItems.map((item) => (
-            <ListItem
-              button
-              key={item.path}
-              component={NavLink}
-              to={item.path}
-              onClick={handleMenuToggle}
-            >
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} />
-            </ListItem>
-          ))}
-        </List>
-      </Drawer>
+      <CenteredMenuOverlay open={menuOpen} onClose={handleMenuToggle} menuItems={menuItems} />
+      {notificationOpen && (
+        <NotificationOverlay
+          notifications={notifications}
+          onClose={handleNotificationClose}
+          onMarkAsRead={handleMarkAsRead}
+        />
+      )}
     </>
   );
 };
