@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { Card, CardContent, Typography, Box, Chip, IconButton } from '@mui/material';
 import ShareIcon from '@mui/icons-material/Share';
-import ThumbUpIcon from '@mui/icons-material/ThumbUp';  // Thumbs up icon
+import ThumbUpIcon from '@mui/icons-material/ThumbUp'; 
 import ThumbDownIcon from '@mui/icons-material/ThumbDown';
 import MailIcon from '@mui/icons-material/Mail';
-import PublicTradeCardOverlay from './PublicTradeCardOverlay';  // Import the overlay
+import PublicTradeCardOverlay from './PublicTradeCardOverlay';
+import { ref, update } from "firebase/database"; // Import from Realtime Database
+import { realtimeDb } from "../firebase"; // Import your Realtime Database instance
 
 const PublicTradeCard = ({ 
+  id, 
   color, 
   title, 
   symbol, 
@@ -20,33 +23,55 @@ const PublicTradeCard = ({
   emoji, 
   likes: initialLikes, 
   comments,
-  commentsList,  // Add the comments list here
-  userId // Make sure to pass the userId here
+  commentsList,  
+  userId 
 }) => {
   const [likes, setLikes] = useState(initialLikes);
   const [liked, setLiked] = useState(false);
   const [disliked, setDisliked] = useState(false);
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
 
-  const handleLike = () => {
+  const handleLike = async () => {
+    let newLikes = likes;
+
     if (liked) {
-      setLikes(likes + 1);
+      newLikes -= 1;
       setLiked(false);
     } else {
-      setLikes(disliked ? likes + 1 : likes + 1);
+      newLikes += disliked ? 2 : 1;
       setLiked(true);
       setDisliked(false);
     }
+
+    setLikes(newLikes);
+
+    try {
+      const tradeRef = ref(realtimeDb, `publicTrades/${id}`);
+      await update(tradeRef, { likes: newLikes });
+    } catch (error) {
+      console.error("Error updating likes:", error);
+    }
   };
 
-  const handleDislike = () => {
+  const handleDislike = async () => {
+    let newLikes = likes;
+
     if (disliked) {
-      setLikes(likes - 1);
+      newLikes += 1;
       setDisliked(false);
     } else {
-      setLikes(liked ? likes - 1 : likes - 1);
+      newLikes -= liked ? 2 : 1;
       setDisliked(true);
       setLiked(false);
+    }
+
+    setLikes(newLikes);
+
+    try {
+      const tradeRef = ref(realtimeDb, `publicTrades/${id}`);
+      await update(tradeRef, { likes: newLikes });
+    } catch (error) {
+      console.error("Error updating likes:", error);
     }
   };
 
@@ -158,9 +183,9 @@ const PublicTradeCard = ({
           sx={{ 
             display: 'flex', 
             justifyContent: 'space-between', 
-            padding: '5px 15px', // Adjusted padding for better spacing
+            padding: '5px 15px', 
             backgroundColor: 'transparent',
-            borderRadius: '25px', // Added border-radius for rounded corners
+            borderRadius: '25px', 
             width: '100%',
             mb: 1,
           }}
@@ -172,8 +197,8 @@ const PublicTradeCard = ({
               backgroundColor: 'transparent',
               borderRadius: '50px',
               padding: '1px 3px',
-              border: '1px solid rgba(255,255,255,0.5)', // Border around the icons
-              flex: 'none',  // Prevents the box from flexing
+              border: '1px solid rgba(255,255,255,0.5)', 
+              flex: 'none',  
               justifyContent: 'space-between',
             }}
           >
@@ -195,8 +220,8 @@ const PublicTradeCard = ({
               backgroundColor: 'transparent',
               borderRadius: '50px',
               padding: '1px 12px',
-              border: '1px solid rgba(255,255,255,0.5)', // Border around the icons
-              flex: 'none', // Prevents the box from flexing
+              border: '1px solid rgba(255,255,255,0.5)', 
+              flex: 'none', 
               justifyContent: 'space-between',
             }}
             onClick={handleCommentClick}
@@ -211,7 +236,6 @@ const PublicTradeCard = ({
         </Box>
       </Card>
 
-      {/* Overlay */}
       {isOverlayOpen && (
         <PublicTradeCardOverlay 
           card={{ 
@@ -228,8 +252,8 @@ const PublicTradeCard = ({
             emoji, 
             likes, 
             comments,
-            commentsList, // Pass comments list here
-            userId, // Pass the userId to the overlay
+            commentsList, 
+            userId, 
             liked, 
             disliked 
           }} 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   AppBar,
@@ -26,7 +26,7 @@ import {
   Close,
 } from "@mui/icons-material";
 import { NavLink, useLocation } from "react-router-dom";
-import avatarImage from "./Avatar-5.png";
+import { getUserProfile } from '../firebaseRealtimeCrud';
 import FilterOverlay from "./FilterOverlay";
 
 const IconButtonContainer = ({ to, children, isActive }) => (
@@ -91,7 +91,7 @@ const SearchOverlay = ({ open, onClose }) => (
   </Box>
 );
 
-const TopBar = ({ onApplyFilters, strategies }) => {  // Accept the strategies prop
+const TopBar = ({ user, onApplyFilters, strategies }) => {
   const location = useLocation();
   const [searchOpen, setSearchOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
@@ -120,11 +120,11 @@ const TopBar = ({ onApplyFilters, strategies }) => {  // Accept the strategies p
 
   const handleApplyFilters = (newFilters) => {
     console.log("Filters applied:", newFilters);
-    if (onApplyFilters) { // Ensure that onApplyFilters is available
-      onApplyFilters(newFilters);  // Pass filters up to App.jsx
+    if (onApplyFilters) {
+      onApplyFilters(newFilters);
     }
     setFilterOpen(false);
-    handleFilterClose();  // Close the overlay after applying filters
+    handleFilterClose();
   };
 
   const handleResetFilters = () => {
@@ -149,6 +149,22 @@ const TopBar = ({ onApplyFilters, strategies }) => {  // Accept the strategies p
     '&:hover': {
       bgcolor: 'rgba(255, 255, 255, 0.2)',
     },
+  };
+
+  // Determine the title based on the current route
+  const getTitle = () => {
+    switch (location.pathname) {
+      case "/":
+        return `Hi 👋 ${user?.userId || "User"}`; // Greet with user ID on the Dashboard
+      case "/community":
+        return "Community";
+      case "/analytics":
+        return "Analytics";
+      case "/messages":
+        return "Messages";
+      default:
+        return "";
+    }
   };
 
   return (
@@ -186,33 +202,23 @@ const TopBar = ({ onApplyFilters, strategies }) => {  // Accept the strategies p
                 background: "linear-gradient(180deg, #FCEBDE 0%, #F7D3BA 100%)",
                 border: "2px solid #FFFFFF",
               }}
-              src={avatarImage}
-              alt="User"
+              src={user?.avatar || "avatar"}
+              alt={user?.userId || "User"}
             />
-            <Box sx={{ display: "flex", alignItems: "center", ml: "15px" }}>
-              <Typography
-                sx={{
-                  fontSize: isMobile ? "18px" : "22px",
-                  fontFamily: "Montserrat",
-                  color: "#E8E8E8",
-                  mr: "7px",
-                }}
-              >
-                Hi 👋
-              </Typography>
-              {!isMobile && !isTablet && (
+            {!isMobile && (
+              <Box sx={{ display: "flex", alignItems: "center", ml: "15px" }}>
                 <Typography
                   sx={{
                     fontSize: "22px",
                     fontFamily: "Montserrat",
-                    fontWeight: 600,
                     color: "#FFFFFF",
+                    fontWeight: 600,
                   }}
                 >
-                  Retro_D@niel!
+                  {getTitle()} {/* Render the appropriate title */}
                 </Typography>
-              )}
-            </Box>
+              </Box>
+            )}
             <Box sx={{ display: "flex", alignItems: "center", ml: 2, gap: 1 }}>
               <IconButton sx={buttonStyle}>
                 <Notifications />
@@ -225,7 +231,6 @@ const TopBar = ({ onApplyFilters, strategies }) => {  // Accept the strategies p
               </IconButton>
             </Box>
           </Box>
-
           <Box sx={{ display: "flex", alignItems: "center" }}>
             {(isMobile || isTablet) && (
               <IconButton onClick={handleMenuToggle} sx={buttonStyle}>
@@ -255,7 +260,7 @@ const TopBar = ({ onApplyFilters, strategies }) => {  // Accept the strategies p
         onClose={handleFilterClose} 
         onApply={handleApplyFilters}
         onReset={handleResetFilters}
-        strategies={strategies} // Pass strategies to the FilterOverlay
+        strategies={strategies} 
       />
 
       <Drawer anchor="right" open={menuOpen} onClose={handleMenuToggle}>

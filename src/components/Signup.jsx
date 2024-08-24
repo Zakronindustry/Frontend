@@ -1,47 +1,29 @@
-import React, { useRef, useState } from "react";
-import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth } from "./firebase";
+import { createUser } from "./firebaseCrud";
 
 const Signup = () => {
-  const emailRef = useRef();
-  const passwordRef = useRef();
-  const { signup } = useAuth();
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate(); // Replaces useHistory
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [userId, setUserId] = useState("");
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
+  const handleSignup = async () => {
     try {
-      setError("");
-      setLoading(true);
-      await signup(emailRef.current.value, passwordRef.current.value);
-      navigate("/dashboard"); // Redirect to dashboard after signup
-    } catch {
-      setError("Failed to create an account");
-    }
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
-    setLoading(false);
+      // Add user to Firestore
+      await createUser({ userId: user.uid, email, profileAge: new Date() });
+
+      console.log("User signed up and added to Firestore");
+    } catch (e) {
+      console.error("Error during signup: ", e);
+    }
   };
 
   return (
-    <div>
-      <h2>Sign Up</h2>
-      {error && <p>{error}</p>}
-      <form onSubmit={handleSubmit}>
-        <input type="email" ref={emailRef} placeholder="Email" required />
-        <input
-          type="password"
-          ref={passwordRef}
-          placeholder="Password"
-          required
-        />
-        <button disabled={loading} type="submit">
-          Sign Up
-        </button>
-      </form>
-    </div>
+    // Your form JSX here
   );
 };
 

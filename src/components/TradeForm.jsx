@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Typography, TextField, Button, IconButton, Switch, FormControlLabel } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { createPublicTrade, createPrivateTrade } from '../firebaseRealtimeCrud'; // Import Firebase CRUD functions
 
 const InputField = ({ icon, placeholder, ...props }) => (
   <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: '25px', p: 1 }}>
@@ -16,7 +17,7 @@ const InputField = ({ icon, placeholder, ...props }) => (
   </Box>
 );
 
-const TradeForm = ({ emotion, onClose, onSave, onAddStrategy }) => {
+const TradeForm = ({ emotion, onClose, onSave, onAddStrategy, userId }) => { // Add userId as a prop
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState('');  // State for Date input
@@ -57,7 +58,7 @@ const TradeForm = ({ emotion, onClose, onSave, onAddStrategy }) => {
     return '#OtherSession'; // Default or for times outside these ranges
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const trimmedTitle = title.substring(0, 30);
     const trimmedDescription = description.substring(0, 80);
 
@@ -66,9 +67,7 @@ const TradeForm = ({ emotion, onClose, onSave, onAddStrategy }) => {
 
     const tags = [`#${strategy}`, sessionTag];
 
-    onAddStrategy(strategy); // Add the strategy to the list
-
-    onSave({
+    const tradeData = {
       instrument: document.getElementById("instrument").value,
       strategy,
       entryPoint: document.getElementById("entryPoint").value,
@@ -81,7 +80,25 @@ const TradeForm = ({ emotion, onClose, onSave, onAddStrategy }) => {
       description: trimmedDescription,
       isPublic, // Save the public/private state
       tags, // Save the generated tags
-    });
+      emoji: getEmotionEmoji(),  // Include emoji
+      color: getEmotionColor(),  // Include color
+      userId // Associate trade with user
+    };
+
+    onAddStrategy(strategy); // Add the strategy to the list
+
+    try {
+      if (isPublic) {
+        await createPublicTrade(tradeData); // Save as public trade
+      } else {
+        await createPrivateTrade(userId, tradeData); // Save as private trade
+      }
+      onSave(tradeData); // Optional: Pass saved data back to parent
+      onClose(); // Close the form
+    } catch (error) {
+      console.error("Error saving trade: ", error);
+      // Handle the error as needed, e.g., show an alert or message to the user
+    }
   };
 
   return (
@@ -117,7 +134,7 @@ const TradeForm = ({ emotion, onClose, onSave, onAddStrategy }) => {
 
         <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 18px', mb: 0.5 }}>
           <InputField icon="🔧" placeholder="Instrument" id="instrument" />
-          <InputField icon="📊" placeholder="Trade strategy" id="strategy" />
+          <InputField icon="📊" placeholder="Strategy" id="strategy" />
           <InputField icon="📈" placeholder="Entry Point" id="entryPoint" />
           <InputField icon="📉" placeholder="Exit Point" id="exitPoint" />
           <InputField icon="💼" placeholder="Position Size" id="positionSize" />

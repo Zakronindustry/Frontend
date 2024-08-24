@@ -1,9 +1,9 @@
 import React from 'react';
 import { Card, CardContent, Typography, Box, Chip, IconButton } from '@mui/material';
 import ShareIcon from '@mui/icons-material/Share';
-import { Title } from '@mui/icons-material';
 
 const TradeCard = ({ color, title, symbol, change, price1, price2, quantity, description, time, tags, emoji, onClick }) => {
+  // Truncate the description if it's too long
   const truncatedDescription = description.length > 60 ? `${description.substring(0, 60)}...` : description;
 
   return (
@@ -21,8 +21,9 @@ const TradeCard = ({ color, title, symbol, change, price1, price2, quantity, des
         cursor: 'pointer',
         position: 'relative', // Add relative positioning to the card container
       }}
-      onClick={onClick} // Add onClick event
+      onClick={onClick} // Trigger the passed onClick event when the card is clicked
     >
+      {/* Share Button */}
       <IconButton 
         size="small" 
         sx={{ 
@@ -38,6 +39,7 @@ const TradeCard = ({ color, title, symbol, change, price1, price2, quantity, des
         <ShareIcon fontSize="small" />
       </IconButton>
 
+      {/* Card Content */}
       <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', position: 'relative', pt: 1 }}>
         <Box sx={{ top: 15, left: 10 }}>
           <Typography 

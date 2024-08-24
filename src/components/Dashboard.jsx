@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { Box, Grid } from "@mui/material";
-import TradeCard from "./TradeCard"; // Private and Public trade card component
+import TradeCard from "./TradeCard";
 import BottomBar from "./BottomBar";
 import TradeForm from "./TradeForm";
-import { dummyTradeCards } from "./dummyTradeCards";
-import TradeCardOverlay from "./TradeCardOverlay"; // Import the correct overlay component
-import { isWithinInterval, parse } from "date-fns"; // Import date-fns utilities
+import TradeCardOverlay from "./TradeCardOverlay";
+import { getUserTrades, getPublicTrades } from "../firebaseRealtimeCrud"; // Import the Realtime CRUD functions
+import { isWithinInterval, parse } from "date-fns"; 
 
-const Dashboard = ({ filters }) => {
-  const [tradeCards, setTradeCards] = useState(dummyTradeCards);
+const Dashboard = ({ filters, userId }) => {
+  const [tradeCards, setTradeCards] = useState([]);
   const [selectedTrade, setSelectedTrade] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedEmotion, setSelectedEmotion] = useState(null);
 
   // Function to apply filters to trade cards
   const applyFilters = (filters) => {
-    let filteredCards = dummyTradeCards;
+    let filteredCards = tradeCards;
 
     if (filters && Object.keys(filters).length > 0) {
       if (filters.emotions?.length > 0) {
@@ -58,13 +58,29 @@ const Dashboard = ({ filters }) => {
       }
     }
 
-    if (filteredCards.length === 0) {
-      // Reset to original data or show no results
-      setTradeCards([]); // Optionally, reset to original data: setTradeCards(dummyTradeCards);
-    } else {
-      setTradeCards(filteredCards);
-    }
+    setTradeCards(filteredCards);
   };
+
+  // Fetch trades data
+  useEffect(() => {
+    const fetchTrades = async () => {
+      try {
+        const privateTrades = await getUserTrades(userId);
+        const publicTrades = await getPublicTrades();
+        setTradeCards([...Object.values(privateTrades || {}), ...Object.values(publicTrades || {})]);
+      } catch (error) {
+        console.error("Error fetching trades:", error);
+      }
+    };
+
+    fetchTrades();
+  }, [userId]);
+
+  useEffect(() => {
+    if (filters) {
+      applyFilters(filters);
+    }
+  }, [filters]);
 
   // Handling emotion selection and form save actions
   const handleEmotionSelect = (emotion) => {
