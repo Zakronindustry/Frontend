@@ -153,7 +153,7 @@ const Dashboard = ({ filters, userId }) => {
       sx={{
         display: "flex",
         justifyContent: "center",
-        bgcolor: "#f5f5f5",
+        bgcolor: "#FCF6F1",
         minHeight: "100vh",
         p: 3,
         pt: "125px",

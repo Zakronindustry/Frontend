@@ -8,6 +8,7 @@ import SignUp from "./components/Signup";
 import Login from "./components/Login";    // Import Login component
 import { getUserProfile } from "./firebaseRealtimeCrud";
 import { auth } from './firebase';  // Import Firebase auth
+import SeedData from "./components/SeedData";
 
 const App = () => {
   const [filters, setFilters] = useState({});

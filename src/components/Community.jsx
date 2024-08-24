@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Grid, Typography } from '@mui/material';
 import PublicTradeCard from './PublicTradeCard';
-import { getPublicTrades } from "../firebaseRealtimeCrud"; // Use the correct import for Firebase CRUD
+import { getPublicTrades } from "../firebaseRealtimeCrud";
 import BottomBar from './BottomBar';
 import TradeForm from './TradeForm';
 import { parse, isWithinInterval } from 'date-fns';
 
 const CommunityPage = ({ filters }) => {
-  const [publicTradeCards, setPublicTradeCards] = useState([]); // Initialize with an empty array
+  const [allTradeCards, setAllTradeCards] = useState([]); // Stores all trades
+  const [filteredTradeCards, setFilteredTradeCards] = useState([]); // Stores filtered trades
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedEmotion, setSelectedEmotion] = useState(null);
 
   const applyFilters = (filters) => {
-    let filteredCards = publicTradeCards.filter(trade => trade.isPublic);
+    let filteredCards = allTradeCards.filter(trade => trade.isPublic);
 
     if (filters && Object.keys(filters).length > 0) {
       if (filters.emotions?.length > 0) {
@@ -55,7 +56,7 @@ const CommunityPage = ({ filters }) => {
       }
     }
 
-    setPublicTradeCards(filteredCards);
+    setFilteredTradeCards(filteredCards);
   };
 
   // Fetch public trades
@@ -63,21 +64,23 @@ const CommunityPage = ({ filters }) => {
     const fetchPublicTrades = async () => {
       try {
         const publicTrades = await getPublicTrades();
-        setPublicTradeCards(Object.values(publicTrades || {})); // Assuming publicTrades is an object
+        const tradeCards = Object.values(publicTrades || {});
+        setAllTradeCards(tradeCards); // Store all trades in state
+        setFilteredTradeCards(tradeCards); // Initially, display all trades
       } catch (error) {
         console.error("Error fetching public trades:", error);
-        setPublicTradeCards([]); // Set empty array on error
+        setAllTradeCards([]);
+        setFilteredTradeCards([]); // Set empty array on error
       }
     };
 
     fetchPublicTrades();
   }, []);
 
+  // Apply filters whenever the filters or allTradeCards change
   useEffect(() => {
-    if (filters) {
-      applyFilters(filters);
-    }
-  }, [filters, publicTradeCards]); // Depend on publicTradeCards to apply filters after fetching
+    applyFilters(filters);
+  }, [filters, allTradeCards]); // Depend on filters and allTradeCards
 
   const handleEmotionSelect = (emotion) => {
     setSelectedEmotion(emotion);
@@ -97,7 +100,7 @@ const CommunityPage = ({ filters }) => {
       emoji: getEmojiForEmotion(selectedEmotion),
       isPublic: true,
     };
-    setPublicTradeCards([newTradeCard, ...publicTradeCards]);
+    setAllTradeCards([newTradeCard, ...allTradeCards]); // Update allTradeCards
     handleFormClose();
   };
 
@@ -124,11 +127,11 @@ const CommunityPage = ({ filters }) => {
   };
 
   return (
-    <Box sx={{ display: 'flex', justifyContent: 'center', bgcolor: '#f5f5f5', minHeight: '100vh', p: 3, pt: '125px', pb: '100px' }}>
+    <Box sx={{ display: 'flex', justifyContent: 'center', bgcolor: '#FCF6F1', minHeight: '100vh', p: 3, pt: '125px', pb: '100px' }}>
       <Box sx={{ width: '95%' }}>
         <Grid container spacing={3}>
-          {publicTradeCards.length > 0 ? (
-            publicTradeCards.map((card, index) => (
+          {filteredTradeCards.length > 0 ? (
+            filteredTradeCards.map((card, index) => (
               <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
                 <PublicTradeCard {...card} />
               </Grid>

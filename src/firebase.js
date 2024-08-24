@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getDatabase } from "firebase/database";
+import { getFirestore } from "firebase/firestore";
+import { getDatabase, ref, set } from "firebase/database"; // Import the necessary functions from the Realtime Database SDK
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -10,7 +11,7 @@ const firebaseConfig = {
   storageBucket: "tradeiq-e4e45.appspot.com",
   messagingSenderId: "391623768180",
   appId: "1:391623768180:web:58edddda83758b2b7bb921",
-  databaseURL: "https://tradeiq-e4e45-default-rtdb.firebaseio.com/", // Realtime Database URL
+  databaseURL: "https://tradeiq-e4e45-default-rtdb.firebaseio.com/",
 };
 
 // Initialize Firebase
@@ -18,7 +19,8 @@ const app = initializeApp(firebaseConfig);
 
 // Export Firebase services
 export const auth = getAuth(app);
-export const realtimeDb = getDatabase(app); // Export Realtime Database
+export const db = getFirestore(app);
+export const realtimeDb = getDatabase(app);
 
-// Firestore is not used in this context, so remove the following lines if not needed:
-// export const db = getFirestore(app);
+// Export the `ref` and `set` functions from the Realtime Database SDK
+export { ref, set };
