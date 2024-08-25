@@ -89,7 +89,7 @@ const PublicTradeCard = ({
         sx={{ 
           backgroundColor: color, 
           borderRadius: '20px', 
-          boxShadow: 'none',
+          boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.1)',
           height: '100%',
           display: 'flex',
           padding: '12px',

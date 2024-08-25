@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Box, Grid } from "@mui/material";
+import { Box, Grid, } from "@mui/material";
 import TradeCard from "./TradeCard";
 import BottomBar from "./BottomBar";
 import TradeForm from "./TradeForm";

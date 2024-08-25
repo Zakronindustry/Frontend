@@ -9,6 +9,7 @@ import Login from "./components/Login";    // Import Login component
 import { getUserProfile } from "./firebaseRealtimeCrud";
 import { auth } from './firebase';  // Import Firebase auth
 import SeedData from "./components/SeedData";
+import Analytics from './components/Analytics';
 
 const App = () => {
   const [filters, setFilters] = useState({});
@@ -49,6 +50,7 @@ const App = () => {
         <Route path="/user/:userId" element={<UserProfile />} /> {/* Add route for user profile */}
         <Route path="/signup" element={<SignUp />} /> {/* Add SignUp route */}
         <Route path="/login" element={<Login />} />   {/* Add Login route */}
+        <Route path="/analytics" element={<Analytics />} />
       </Routes>
     </Router>
   );
