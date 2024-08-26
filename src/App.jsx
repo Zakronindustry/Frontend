@@ -10,6 +10,7 @@ import { getUserProfile } from "./firebaseRealtimeCrud";
 import { auth } from './firebase';  // Import Firebase auth
 import SeedData from "./components/SeedData";
 import Analytics from './components/Analytics';
+import Messages from './components/Messages';
 
 const App = () => {
   const [filters, setFilters] = useState({});
@@ -51,6 +52,7 @@ const App = () => {
         <Route path="/signup" element={<SignUp />} /> {/* Add SignUp route */}
         <Route path="/login" element={<Login />} />   {/* Add Login route */}
         <Route path="/analytics" element={<Analytics />} />
+        <Route path="/messages" element={<Messages />}/>
       </Routes>
     </Router>
   );

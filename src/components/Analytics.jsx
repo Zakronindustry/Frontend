@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Box, Grid, Typography, Card, List, ListItem, ListItemText } from '@mui/material';
 import { Doughnut } from 'react-chartjs-2';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
@@ -12,6 +12,7 @@ import {
 } from 'chart.js';
 import TopBar from './TopBar';
 import BottomBar from './BottomBar';
+import TradeForm from './TradeForm';
 
 // Register the required components
 ChartJS.register(ArcElement, Tooltip, Legend, ChartDataLabels);
@@ -68,6 +69,53 @@ const Analytics = () => {
     },
     cutout: '60%',
   };
+
+  const handleEmotionSelect = (emotion) => {
+    setSelectedEmotion(emotion);
+    setIsFormOpen(true);
+  };
+
+  const handleFormClose = () => {
+    setIsFormOpen(false);
+    setSelectedEmotion(null);
+  };
+
+  const handleFormSave = (tradeData) => {
+    const newTradeCard = {
+      ...tradeData,
+      emotion: selectedEmotion,
+      color: getColorForEmotion(selectedEmotion),
+      emoji: getEmojiForEmotion(selectedEmotion),
+      isPublic: true,
+    };
+    setAllTradeCards([newTradeCard, ...allTradeCards]); // Update allTradeCards
+    handleFormClose();
+  };
+
+  const getColorForEmotion = (emotion) => {
+    switch (emotion) {
+      case 'Anxious': return '#F5BCBB';
+      case 'Calm': return '#D0E9BC';
+      case 'Confident': return '#B0DCF0';
+      case 'Greedy': return '#F5E0B2';
+      case 'Frustrated': return '#C1BCBC';
+      default: return '#FFFFFF';
+    }
+  };
+
+  const getEmojiForEmotion = (emotion) => {
+    switch (emotion) {
+      case 'Anxious': return '🤯';
+      case 'Calm': return '😊';
+      case 'Confident': return '😎';
+      case 'Greedy': return '🤑';
+      case 'Frustrated': return '😠';
+      default: return '😊';
+    }
+  };
+
+  const [selectedEmotion, setSelectedEmotion] = useState(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   return (
     <Box sx={{ bgcolor: '#FCF6F1', minHeight: '100vh', pb: '100px' }}>
@@ -369,8 +417,15 @@ const Analytics = () => {
             </Card>
           </Grid>
         </Grid>
+        <BottomBar onCreateTradeCard={handleEmotionSelect} />
+        {isFormOpen && (
+          <TradeForm
+            emotion={selectedEmotion}
+            onClose={handleFormClose}
+            onSave={handleFormSave}
+          />
+        )}
       </Box>
-      <BottomBar />
     </Box>
   );
 };
