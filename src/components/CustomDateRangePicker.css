@@ -1,0 +1,22 @@
+.calendar-only .rdrDefinedRangesWrapper {
+  display: none !important; /* Completely remove the static ranges section */
+}
+
+.calendar-only .rdrDateRangeWrapper {
+  display: block;
+  flex-grow: 1; /* Force the calendar to take up the full width */
+  padding: 0; /* Remove padding to minimize the width */
+  margin: 0; /* Remove any margin */
+}
+
+.calendar-only .rdrCalendarWrapper {
+  padding: 0 !important; /* Ensure no padding inside the calendar wrapper */
+  margin: 0 auto; /* Center the calendar */
+  width: 100%; /* Take up the full width of the container */
+}
+
+.calendar-only .rdrMonth {
+  padding: 0 !important; /* Ensure the month has no extra padding */
+  margin: 0; /* Remove margin */
+  width: 100%; /* Take up the full width */
+}

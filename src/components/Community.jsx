@@ -137,9 +137,17 @@ const CommunityPage = ({ filters }) => {
               </Grid>
             ))
           ) : (
-            <Typography variant="h6" sx={{ textAlign: 'center', width: '100%' }}>
-              No trades found.
-            </Typography>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '50vh',
+          width: '100%',
+        }}
+      >
+        <Typography variant="subtitle1">No trades from the community!</Typography>
+      </Box>
           )}
         </Grid>
         <BottomBar onCreateTradeCard={handleEmotionSelect} />

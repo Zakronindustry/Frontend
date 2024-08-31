@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Typography, TextField, Button, IconButton, Switch, FormControlLabel } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { createPublicTrade, createPrivateTrade } from '../firebaseRealtimeCrud'; // Import Firebase CRUD functions
+import { createPublicTrade, createPrivateTrade, updateTrade } from '../firebaseRealtimeCrud'; // Import Firebase CRUD functions
 
 const InputField = ({ icon, placeholder, ...props }) => (
   <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: '25px', p: 1 }}>
@@ -17,12 +17,24 @@ const InputField = ({ icon, placeholder, ...props }) => (
   </Box>
 );
 
-const TradeForm = ({ emotion, onClose, onSave, onAddStrategy, userId }) => { // Add userId as a prop
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [date, setDate] = useState('');  // State for Date input
-  const [time, setTime] = useState('');  // State for Time input
-  const [isPublic, setIsPublic] = useState(false); // State to track if the trade is public or private
+const TradeForm = ({ emotion, onClose, onSave, onAddStrategy, userId, existingTrade = null }) => { 
+  // If existingTrade is provided, populate fields with its data
+  const [title, setTitle] = useState(existingTrade?.reason || '');
+  const [description, setDescription] = useState(existingTrade?.description || '');
+  const [date, setDate] = useState(existingTrade?.date || '');
+  const [time, setTime] = useState(existingTrade?.time || '');
+  const [isPublic, setIsPublic] = useState(existingTrade?.isPublic || false);
+
+  useEffect(() => {
+    if (existingTrade) {
+      // If editing, set form data based on existing trade
+      setTitle(existingTrade.reason || '');
+      setDescription(existingTrade.description || '');
+      setDate(existingTrade.date || '');
+      setTime(existingTrade.time || '');
+      setIsPublic(existingTrade.isPublic || false);
+    }
+  }, [existingTrade]);
 
   const getEmotionColor = () => {
     switch (emotion.toLowerCase()) {
@@ -88,10 +100,16 @@ const TradeForm = ({ emotion, onClose, onSave, onAddStrategy, userId }) => { // 
     onAddStrategy(strategy); // Add the strategy to the list
 
     try {
-      if (isPublic) {
-        await createPublicTrade(tradeData); // Save as public trade
+      if (existingTrade) {
+        // If editing, update the existing trade
+        await updateTrade(userId, existingTrade.id, tradeData); // Assuming updateTrade is a function in your Firebase CRUD file
       } else {
-        await createPrivateTrade(userId, tradeData); // Save as private trade
+        // If not editing, create a new trade
+        if (isPublic) {
+          await createPublicTrade(tradeData); // Save as public trade
+        } else {
+          await createPrivateTrade(userId, tradeData); // Save as private trade
+        }
       }
       onSave(tradeData); // Optional: Pass saved data back to parent
       onClose(); // Close the form
@@ -133,12 +151,12 @@ const TradeForm = ({ emotion, onClose, onSave, onAddStrategy, userId }) => { // 
         </Box>
 
         <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 18px', mb: 0.5 }}>
-          <InputField icon="🔧" placeholder="Instrument" id="instrument" />
-          <InputField icon="📊" placeholder="Strategy" id="strategy" />
-          <InputField icon="📈" placeholder="Entry Point" id="entryPoint" />
-          <InputField icon="📉" placeholder="Exit Point" id="exitPoint" />
-          <InputField icon="💼" placeholder="Position Size" id="positionSize" />
-          <InputField icon="💰" placeholder="Profit/Loss" id="profitLoss" />
+          <InputField icon="🔧" placeholder="Instrument" id="instrument" defaultValue={existingTrade?.instrument || ''} />
+          <InputField icon="📊" placeholder="Strategy" id="strategy" defaultValue={existingTrade?.strategy || ''} />
+          <InputField icon="📈" placeholder="Entry Point" id="entryPoint" defaultValue={existingTrade?.entryPoint || ''} />
+          <InputField icon="📉" placeholder="Exit Point" id="exitPoint" defaultValue={existingTrade?.exitPoint || ''} />
+          <InputField icon="💼" placeholder="Position Size" id="positionSize" defaultValue={existingTrade?.positionSize || ''} />
+          <InputField icon="💰" placeholder="Profit/Loss" id="profitLoss" defaultValue={existingTrade?.profitLoss || ''} />
           <InputField
             icon="📅"
             placeholder="DD-MM-YYYY"

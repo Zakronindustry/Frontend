@@ -17,13 +17,13 @@ const PublicTradeCard = ({
   price1, 
   price2, 
   quantity, 
-  description, 
+  description = '', // Default to an empty string if undefined
   time, 
-  tags, 
+  tags = [], // Default to an empty array if undefined
   emoji, 
   likes: initialLikes, 
   comments,
-  commentsList,  
+  commentsList = [],  // Default to an empty array if undefined
   userId 
 }) => {
   const [likes, setLikes] = useState(initialLikes);

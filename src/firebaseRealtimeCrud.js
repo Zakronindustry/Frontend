@@ -72,6 +72,18 @@ export const createPrivateTrade = async (userId, tradeData) => {
   }
 };
 
+// Function to update an existing trade
+export const updateTrade = async (userId, tradeId, updatedData) => {
+  try {
+    const tradeRef = ref(realtimeDb, `users/${userId}/trades/${tradeId}`);
+    await update(tradeRef, updatedData);
+    console.log("Trade updated successfully");
+  } catch (error) {
+    console.error("Error updating trade: ", error);
+    throw error;
+  }
+};
+
 // Function to get a user's trades (public and private)
 export const getUserTrades = async (userId) => {
   try {
@@ -134,6 +146,65 @@ export const getPublicTrades = async () => {
     }
   } catch (error) {
     console.error("Error fetching public trades: ", error);
+    return [];
+  }
+};
+
+export const flagTrade = async (tradeId, userId) => {
+  try {
+    const tradeRef = ref(realtimeDb, `publicTrades/${tradeId}`);
+    const snapshot = await get(tradeRef);
+
+    if (snapshot.exists()) {
+      const tradeData = snapshot.val();
+      const currentFlags = tradeData.flags || 0;
+      const flaggedBy = tradeData.flaggedBy || [];
+
+      // Check if the user has already flagged this trade
+      if (flaggedBy.includes(userId)) {
+        console.log(`User ${userId} has already flagged trade ${tradeId}.`);
+        return; // Exit the function if the user has already flagged the trade
+      }
+
+      const updatedFlags = currentFlags + 1;
+      const updatedFlaggedBy = [...flaggedBy, userId]; // Add the user to the flaggedBy array
+
+      // Update the flag count and flaggedBy array
+      await update(tradeRef, { flags: updatedFlags, flaggedBy: updatedFlaggedBy });
+
+      // If the trade has been flagged 10 times, ban it
+      if (updatedFlags >= 10) {
+        await update(tradeRef, { banned: true });
+        console.log(`Trade ${tradeId} has been banned from the Community page.`);
+      } else {
+        console.log(`Trade ${tradeId} flagged ${updatedFlags} times by user ${userId}.`);
+      }
+    } else {
+      console.log(`Trade ${tradeId} not found.`);
+    }
+  } catch (error) {
+    console.error('Error flagging trade:', error);
+  }
+};
+
+// Function to get a user's public trades
+export const getUserPublicTrades = async (userId) => {
+  try {
+    const publicTradesRef = ref(realtimeDb, `publicTrades`);
+    const snapshot = await get(publicTradesRef);
+    if (snapshot.exists()) {
+      const allTrades = snapshot.val();
+      // Filter trades that belong to the specific user
+      const userTrades = Object.keys(allTrades)
+        .filter(key => allTrades[key].userId === userId)
+        .map(key => ({ id: key, ...allTrades[key] }));
+      return userTrades;
+    } else {
+      console.log("No public trades available");
+      return [];
+    }
+  } catch (error) {
+    console.error("Error fetching user's public trades: ", error);
     return [];
   }
 };

@@ -13,11 +13,21 @@ import {
 import TopBar from './TopBar';
 import BottomBar from './BottomBar';
 import TradeForm from './TradeForm';
+import DatePickerOverlay from './DatePickerOverlay'; // Import the DatePickerOverlay
 
 // Register the required components
 ChartJS.register(ArcElement, Tooltip, Legend, ChartDataLabels);
 
 const Analytics = () => {
+  const [selectedEmotion, setSelectedEmotion] = useState(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false); // State for date picker
+  const [selectedDateRange, setSelectedDateRange] = useState({
+    startDate: null,
+    endDate: null,
+  }); // State to store selected date range
+
   const moods = [
     { emoji: '😠', label: 'Frustrated', trades: 19, avgPL: '-$4,579', winRate: '32%', bgColor: '#d3d3d3' },
     { emoji: '🤯', label: 'Anxious', trades: 18, avgPL: '+$1,572', winRate: '42%', bgColor: '#F5BCBB' },
@@ -27,27 +37,27 @@ const Analytics = () => {
   ];
 
   const topSessions = [
-    { session: 'Morning Session', avgPL: '+$6K', trades: 27, win: '72%', bgColor: '#ffeb99' },
-    { session: 'After-hours Session', avgPL: '+$3K', trades: 12, win: '68%', bgColor: '#d9d9d9' },
-    { session: 'Afternoon Session', avgPL: '+$679', trades: 8, win: '66%', bgColor: '#ffcc99' },
+    { session: 'Morning Session', trades: 27, winRate: '72%', bgColor: '#ffeb99' },
+    { session: 'After-hours Session', trades: 12, winRate: '68%', bgColor: '#d9d9d9' },
+    { session: 'Afternoon Session', trades: 8, winRate: '66%', bgColor: '#ffcc99' },
   ];
 
   const topInstruments = [
-    { instrument: 'USD/CAD', avgPL: '+$6K', trades: 27, win: '72%', bgColor: '#ffeb99' },
-    { instrument: 'BTC/USD', avgPL: '+$3K', trades: 12, win: '68%', bgColor: '#d9d9d9' },
-    { instrument: 'EUR/GBP', avgPL: '+$679', trades: 8, win: '66%', bgColor: '#ffcc99' },
+    { instrument: 'USD/CAD', trades: 27, winRate: '72%', bgColor: '#ffeb99' },
+    { instrument: 'BTC/USD', trades: 12, winRate: '68%', bgColor: '#d9d9d9' },
+    { instrument: 'EUR/GBP', trades: 8, winRate: '66%', bgColor: '#ffcc99' },
   ];
 
   const topStrategies = [
-    { strategy: 'News-Driven', avgPL: '+$6K', trades: 27, win: '72%', bgColor: '#ffeb99' },
-    { strategy: 'Trend Following', avgPL: '+$3K', trades: 12, win: '68%', bgColor: '#d9d9d9' },
-    { strategy: 'Breakout', avgPL: '+$679', trades: 8, win: '66%', bgColor: '#ffcc99' },
+    { strategy: 'News-Driven', trades: 27, winRate: '72%', bgColor: '#ffeb99' },
+    { strategy: 'Trend Following', trades: 12, winRate: '68%', bgColor: '#d9d9d9' },
+    { strategy: 'Breakout', trades: 8, winRate: '66%', bgColor: '#ffcc99' },
   ];
 
   const doughnutData = {
     labels: ['😠', '🤯', '😊', '😎', '🤑'],
     datasets: [{
-      data: [10, 5, 40, 30, 15],
+      data: [13, 7, 35, 25, 20],
       backgroundColor: ['#C1BCBC', '#F5BCBB', '#D0E9BC', '#B0DCF0', '#F5E0B2'],
     }],
   };
@@ -114,12 +124,24 @@ const Analytics = () => {
     }
   };
 
-  const [selectedEmotion, setSelectedEmotion] = useState(null);
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  // Handle the date picker overlay
+  const handleDatePickerOpen = () => {
+    setIsDatePickerOpen(true);
+  };
+
+  const handleDatePickerClose = () => {
+    setIsDatePickerOpen(false);
+  };
+
+  const handleApplyDateRange = (range) => {
+    setSelectedDateRange(range);
+    // Implement your logic here to filter data based on the selected date range
+    console.log("Selected date range:", range);
+  };
 
   return (
     <Box sx={{ bgcolor: '#FCF6F1', minHeight: '100vh', pb: '100px' }}>
-      <TopBar />
+      <TopBar onDatePickerOpen={handleDatePickerOpen} /> {/* Pass down the date picker handler */}
       <Box sx={{ width: '90%', mx: 'auto', pt: '125px' }}>
         <Grid container spacing={3} sx={{ marginBottom: 3 }}>
           {moods.map((mood, index) => (
@@ -172,7 +194,7 @@ const Analytics = () => {
         </Grid>
 
         <Grid container spacing={3} sx={{ marginBottom: 3 }}>
-          <Grid item xs={12} md={8}> {/* Changed from md={6} to md={8} */}
+          <Grid item xs={12} md={8}>
             <Card sx={{
               padding: 3,
               textAlign: 'center',
@@ -193,7 +215,7 @@ const Analytics = () => {
                   <Box sx={{ width: '100%', height: '35%', backgroundColor: '#D0E9BC', borderRadius: '20px 20px 20px 20px' }} /> {/* 😊 */}
                   <Box sx={{ width: '100%', height: '20%', backgroundColor: '#C1BCBC', borderRadius: '20px 20px 20px 20px' }} /> {/* 😠 */}
                   <Box sx={{ width: '100%', height: '10%', backgroundColor: '#F5BCBB', borderRadius: '20px 20px 20px 20px' }} /> {/* 🤯 */}
-                  <Typography variant="caption" sx={{ marginTop: 1 }}>4AM - 9AM</Typography>
+                  <Typography variant="caption" sx={{ marginTop: 1 }}>4AM~</Typography>
                 </Box>
                 {/* Session 2: 9AM - 12PM */}
                 <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', width: '18%' }}>
@@ -202,7 +224,7 @@ const Analytics = () => {
                   <Box sx={{ width: '100%', height: '45%', backgroundColor: '#D0E9BC', borderRadius: '20px 20px 20px 20px' }} /> {/* 😊 */}
                   <Box sx={{ width: '100%', height: '5%', backgroundColor: '#C1BCBC', borderRadius: '20px 20px 20px 20px' }} /> {/* 😠 */}
                   <Box sx={{ width: '100%', height: '5%', backgroundColor: '#F5BCBB', borderRadius: '20px 20px 20px 20px' }} /> {/* 🤯 */}
-                  <Typography variant="caption" sx={{ marginTop: 1 }}>9AM - 12PM</Typography>
+                  <Typography variant="caption" sx={{ marginTop: 1 }}>9AM~</Typography>
                 </Box>
                 {/* Session 3: 12PM - 2PM */}
                 <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', width: '18%' }}>
@@ -211,7 +233,7 @@ const Analytics = () => {
                   <Box sx={{ width: '100%', height: '35%', backgroundColor: '#D0E9BC', borderRadius: '20px 20px 20px 20px' }} /> {/* 😊 */}
                   <Box sx={{ width: '100%', height: '10%', backgroundColor: '#C1BCBC', borderRadius: '20px 20px 20px 20px' }} /> {/* 😠 */}
                   <Box sx={{ width: '100%', height: '5%', backgroundColor: '#F5BCBB', borderRadius: '20px 20px 20px 20px' }} /> {/* 🤯 */}
-                  <Typography variant="caption" sx={{ marginTop: 1 }}>12PM - 2PM</Typography>
+                  <Typography variant="caption" sx={{ marginTop: 1 }}>12PM~</Typography>
                 </Box>
                 {/* Session 4: 2PM - 4PM */}
                 <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', width: '18%' }}>
@@ -220,7 +242,7 @@ const Analytics = () => {
                   <Box sx={{ width: '100%', height: '10%', backgroundColor: '#D0E9BC', borderRadius: '20px 20px 20px 20px' }} /> {/* 😊 */}
                   <Box sx={{ width: '100%', height: '25%', backgroundColor: '#C1BCBC', borderRadius: '20px 20px 20px 20px' }} /> {/* 😠 */}
                   <Box sx={{ width: '100%', height: '15%', backgroundColor: '#F5BCBB', borderRadius: '20px 20px 20px 20px' }} /> {/* 🤯 */}
-                  <Typography variant="caption" sx={{ marginTop: 1 }}>2PM - 4PM</Typography>
+                  <Typography variant="caption" sx={{ marginTop: 1 }}>2PM~</Typography>
                 </Box>
                 {/* Session 5: 4PM - 8PM */}
                 <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', width: '18%' }}>
@@ -229,12 +251,12 @@ const Analytics = () => {
                   <Box sx={{ width: '100%', height: '20%', backgroundColor: '#D0E9BC', borderRadius: '20px 20px 20px 20px' }} /> {/* 😊 */}
                   <Box sx={{ width: '100%', height: '5%', backgroundColor: '#C1BCBC', borderRadius: '20px 20px 20px 20px' }} /> {/* 😠 */}
                   <Box sx={{ width: '100%', height: '10%', backgroundColor: '#F5BCBB', borderRadius: '20px 20px 20px 20px' }} /> {/* 🤯 */}
-                  <Typography variant="caption" sx={{ marginTop: 1 }}>4PM - 8PM</Typography>
+                  <Typography variant="caption" sx={{ marginTop: 1 }}>4PM~</Typography>
                 </Box>
               </Box>
             </Card>
           </Grid>
-          <Grid item xs={12} md={4}> {/* Changed from md={6} to md={4} */}
+          <Grid item xs={12} md={4}>
             <Card sx={{
               padding: 3,
               textAlign: 'center',
@@ -289,9 +311,6 @@ const Analytics = () => {
                       </Typography>
                       <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
                         <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
-                          💰 {session.avgPL}
-                        </Typography>
-                        <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
                           📊 {session.trades} Trades
                         </Typography>
                         <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center' }}>
@@ -344,9 +363,6 @@ const Analytics = () => {
                         {instrument.instrument}
                       </Typography>
                       <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                        <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
-                          💰 {instrument.avgPL}
-                        </Typography>
                         <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
                           📊 {instrument.trades} Trades
                         </Typography>
@@ -401,9 +417,6 @@ const Analytics = () => {
                       </Typography>
                       <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
                         <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
-                          💰 {strategy.avgPL}
-                        </Typography>
-                        <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
                           📊 {strategy.trades} Trades
                         </Typography>
                         <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center' }}>
@@ -426,6 +439,13 @@ const Analytics = () => {
           />
         )}
       </Box>
+
+      {/* Date Picker Overlay */}
+      <DatePickerOverlay 
+        open={isDatePickerOpen} 
+        onClose={handleDatePickerClose} 
+        onApply={handleApplyDateRange} 
+      />
     </Box>
   );
 };

@@ -1,111 +1,85 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Avatar, Button, IconButton, Grid } from '@mui/material';
+import { Box, Typography, Grid } from '@mui/material';
 import { useParams } from 'react-router-dom';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import ShareIcon from '@mui/icons-material/Share';
-import MessageIcon from '@mui/icons-material/Message';
-import AddIcon from '@mui/icons-material/Add';
 import PublicTradeCard from './components/PublicTradeCard';
 import BottomBar from './components/BottomBar';
 import TopBar from './components/TopBar';
-import { getUserProfile } from './firebaseRealtimeCrud'; // Import from firebaseRealtimeCrud.js
+import { getUserProfile, getUserPublicTrades } from './firebaseRealtimeCrud';
 import { useTheme, useMediaQuery } from '@mui/material';
 
 const UserProfile = () => {
-  const { userId } = useParams(); // Assuming userId is passed in the route
+  const { userId } = useParams(); // Get the userId from the URL parameters
   const [userData, setUserData] = useState(null);
-
+  const [publicTrades, setPublicTrades] = useState([]);
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm')); // Check if screen is mobile
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
-    const fetchUserProfile = async () => {
-      const profileData = await getUserProfile(userId);
-      setUserData(profileData);
+    const fetchUserProfileAndTrades = async () => {
+      try {
+        // Fetch user data
+        const profileData = await getUserProfile(userId);
+        setUserData(profileData);
+
+        // Fetch public trades associated with this user
+        const trades = await getUserPublicTrades(userId);
+        setPublicTrades(trades);
+      } catch (error) {
+        console.error('Error fetching user profile or trades:', error);
+      }
     };
 
-    fetchUserProfile();
+    fetchUserProfileAndTrades();
   }, [userId]);
 
   if (!userData) {
-    return <Typography>Loading...</Typography>;
+    return <Typography>Loading...</Typography>; // Show a loading message while data is being fetched
   }
 
   return (
-    <Box sx={{
+    <Box
+      sx={{
         display: "flex",
         justifyContent: "center",
-        bgcolor: "#FCF6F1", // Match the background color in the design
+        bgcolor: "#FCF6F1",
         minHeight: "100vh",
         p: 3,
         pt: "125px",
         pb: "140px",
-      }}>
-      <TopBar />
+      }}
+    >
+      <TopBar profileData={{ avatar: userData.avatar, userName: userData.userId }} />
+
       <Box sx={{ width: "100%", maxWidth: "1200px" }}>
-        {/* Profile Info */}
-        <Box sx={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'space-between', 
-          mb: 2 
-        }}>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Avatar
-              src={userData.avatar}
-              alt={userData.userId}
-              sx={{ width: 52, height: 52, mr: 2, borderRadius: '50%' }}
-            />
-            {!isMobile && (
-              <Box>
-                <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-                  {userData.userId}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {new Date(userData.profileAge).toLocaleDateString()} • {userData.publicTrades} Public trades • {userData.followers} Followers
-                </Typography>
-              </Box>
-            )}
-          </Box>
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <IconButton
+        <Grid container spacing={3}>
+          {publicTrades.length > 0 ? (
+            publicTrades.map((trade, index) => (
+              <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
+                <Box
+                  sx={{
+                    backgroundColor: trade.color || "#e0e0e0",
+                    borderRadius: 5,
+                    paddingTop: "0%",
+                    position: "relative",
+                  }}
+                >
+                  <PublicTradeCard {...trade} />
+                </Box>
+              </Grid>
+            ))
+          ) : (
+            <Box
               sx={{
-                backgroundColor: "#000",
-                color: "#fff",
-                borderRadius: "50%",
-                '&:hover': {
-                  backgroundColor: "#333",
-                },
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                minHeight: '50vh',
+                width: '100%',
               }}
             >
-              <AddIcon />
-            </IconButton>
-            <IconButton>
-              <MessageIcon />
-            </IconButton>
-            <IconButton>
-              <ShareIcon />
-            </IconButton>
-            <IconButton>
-              <MoreVertIcon />
-            </IconButton>
-          </Box>
-        </Box>
-
-        {/* Public Trades Grid */}
-        <Grid container spacing={3}>
-          {userData.trades && userData.trades.map((trade, index) => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
-              <Box sx={{
-                backgroundColor: trade.color || "#e0e0e0", // Use the trade color or a default grey
-                borderRadius: 3,
-                paddingTop: "100%", // 1:1 aspect ratio
-                position: "relative",
-              }}>
-                <PublicTradeCard {...trade} />
-              </Box>
-            </Grid>
-          ))}
+              <Typography variant="subtitle1">No public trades found</Typography>
+            </Box>
+          )}
         </Grid>
       </Box>
       <BottomBar />

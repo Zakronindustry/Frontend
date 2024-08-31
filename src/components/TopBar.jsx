@@ -24,9 +24,14 @@ import {
   Menu,
   FilterList,
   Close,
+  Add,
+  Message,
+  Share,
+  MoreVert,
 } from "@mui/icons-material";
 import { NavLink, useLocation } from "react-router-dom";
 import FilterOverlay from "./FilterOverlay";
+import DatePickerOverlay from "./DatePickerOverlay"; // Import DatePickerOverlay
 import NotificationOverlay from "./NotificationOverlay"; // Import the notification overlay component
 import { getNotifications, markNotificationAsRead } from "../firebaseRealtimeCrud"; // Import Firebase functions
 
@@ -129,13 +134,13 @@ const CenteredMenuOverlay = ({ open, onClose, menuItems }) => (
   </Dialog>
 );
 
-const TopBar = ({ user, onApplyFilters, strategies }) => {
+const TopBar = ({ user, profileData, onApplyFilters, onApplyDateRange, onResetDateRange, strategies }) => {
   const location = useLocation();
   const [searchOpen, setSearchOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [notificationOpen, setNotificationOpen] = useState(false); // State for notification overlay
-  const [notifications, setNotifications] = useState([]); // State for notifications
+  const [notificationOpen, setNotificationOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
@@ -187,7 +192,6 @@ const TopBar = ({ user, onApplyFilters, strategies }) => {
   const handleMenuToggle = () => setMenuOpen(!menuOpen);
 
   const handleApplyFilters = (newFilters) => {
-    console.log("Filters applied:", newFilters);
     if (onApplyFilters) {
       onApplyFilters(newFilters);
     }
@@ -198,6 +202,21 @@ const TopBar = ({ user, onApplyFilters, strategies }) => {
   const handleResetFilters = () => {
     onApplyFilters({ emotions: [], symbols: [], sessions: [], strategies: [] });
     handleFilterClose();
+  };
+
+  const getTitle = () => {
+    switch (location.pathname) {
+      case "/":
+        return `Hi 👋 ${user?.userId || "User"}`; // Greet with user ID on the Dashboard
+      case "/community":
+        return "Community";
+      case "/analytics":
+        return "Analytics";
+      case "/messages":
+        return "Messages";
+      default:
+        return "";
+    }
   };
 
   const menuItems = [
@@ -217,22 +236,6 @@ const TopBar = ({ user, onApplyFilters, strategies }) => {
     '&:hover': {
       bgcolor: 'rgba(255, 255, 255, 0.2)',
     },
-  };
-
-  // Determine the title based on the current route
-  const getTitle = () => {
-    switch (location.pathname) {
-      case "/":
-        return `Hi 👋 ${user?.userId || "User"}`; // Greet with user ID on the Dashboard
-      case "/community":
-        return "Community";
-      case "/analytics":
-        return "Analytics";
-      case "/messages":
-        return "Messages";
-      default:
-        return "";
-    }
   };
 
   return (
@@ -262,43 +265,97 @@ const TopBar = ({ user, onApplyFilters, strategies }) => {
             px: "10px",
           }}
         >
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            <Avatar
-              sx={{
-                width: "51px",
-                height: "51px",
-                background: "linear-gradient(180deg, #FCEBDE 0%, #F7D3BA 100%)",
-                border: "2px solid #FFFFFF",
-              }}
-              src={user?.avatar || "avatar"}
-              alt={user?.userId || "User"}
-            />
-            {!isMobile && !isTablet && (
-              <Box sx={{ display: "flex", alignItems: "center", ml: "15px" }}>
-                <Typography
+          {location.pathname.includes("/user/") ? (
+            // Display profile avatar and name of the visited user
+            <>
+              <Box sx={{ display: "flex", alignItems: "center" }}>
+                <Avatar
                   sx={{
-                    fontSize: isMobile ? "18px" : "22px",
-                    fontFamily: "Montserrat",
-                    color: "#FFFFFF",
-                    fontWeight: 600,
+                    width: "51px",
+                    height: "51px",
+                    background: "linear-gradient(180deg, #FCEBDE 0%, #F7D3BA 100%)",
+                    border: "2px solid #FFFFFF",
                   }}
-                >
-                  {getTitle()} {/* Render the appropriate title */}
-                </Typography>
+                  src={profileData?.avatar || "avatar"}
+                  alt={profileData?.userName || "User"}
+                />
+                {!isMobile && !isTablet && (
+                  <Box sx={{ display: "flex", alignItems: "center", ml: "15px" }}>
+                    <Typography
+                      sx={{
+                        fontSize: isMobile ? "18px" : "22px",
+                        fontFamily: "Montserrat",
+                        color: "#FFFFFF",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {profileData?.userName || "User"} {/* Render the profile name */}
+                    </Typography>
+                  </Box>
+                )}
               </Box>
-            )}
-          </Box>
-          <Box sx={{ display: "flex", alignItems: "center", ml: 2, gap: 1 }}>
-            <IconButton sx={buttonStyle} onClick={handleNotificationClick}>
-              <Notifications />
-            </IconButton>
-            <IconButton onClick={handleSearchClick} sx={buttonStyle}>
-              <Search />
-            </IconButton>
-            <IconButton onClick={handleFilterClick} sx={buttonStyle}>
-              <FilterList />
-            </IconButton>
-          </Box>
+              <Box sx={{ display: "flex", alignItems: "center", ml: 2, gap: 1 }}>
+                <IconButton sx={buttonStyle}>
+                  <Add />
+                </IconButton>
+                <IconButton sx={buttonStyle}>
+                  <Message />
+                </IconButton>
+                <IconButton sx={buttonStyle}>
+                  <Share />
+                </IconButton>
+                <IconButton sx={buttonStyle}>
+                  <MoreVert />
+                </IconButton>
+              </Box>
+            </>
+          ) : (
+            <>
+              <Box sx={{ display: "flex", alignItems: "center" }}>
+                <Avatar
+                  sx={{
+                    width: "51px",
+                    height: "51px",
+                    background: "linear-gradient(180deg, #FCEBDE 0%, #F7D3BA 100%)",
+                    border: "2px solid #FFFFFF",
+                  }}
+                  src={user?.avatar || "avatar"}
+                  alt={user?.userId || "User"}
+                />
+                {!isMobile && !isTablet && (
+                  <Box sx={{ display: "flex", alignItems: "center", ml: "15px" }}>
+                    <Typography
+                      sx={{
+                        fontSize: isMobile ? "18px" : "22px",
+                        fontFamily: "Montserrat",
+                        color: "#FFFFFF",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {getTitle()} {/* Render the appropriate title */}
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
+              <Box sx={{ display: "flex", alignItems: "center", ml: 2, gap: 1 }}>
+                <IconButton sx={buttonStyle} onClick={handleNotificationClick}>
+                  <Notifications />
+                </IconButton>
+                <IconButton onClick={handleSearchClick} sx={buttonStyle}>
+                  <Search />
+                </IconButton>
+                {location.pathname === "/analytics" || location.pathname === "/messages" ? (
+                  <IconButton onClick={handleFilterClick} sx={buttonStyle}>
+                    <FilterList />
+                  </IconButton>
+                ) : (
+                  <IconButton onClick={handleFilterClick} sx={buttonStyle}>
+                    <FilterList />
+                  </IconButton>
+                )}
+              </Box>
+            </>
+          )}
           <Box sx={{ display: "flex", alignItems: "center", marginLeft: "auto" }}>
             {(isMobile || isTablet) && (
               <IconButton onClick={handleMenuToggle} sx={buttonStyle}>
@@ -323,13 +380,22 @@ const TopBar = ({ user, onApplyFilters, strategies }) => {
       </AppBar>
 
       <SearchOverlay open={searchOpen} onClose={handleSearchClose} />
-      <FilterOverlay 
-        open={filterOpen} 
-        onClose={handleFilterClose} 
-        onApply={handleApplyFilters}
-        onReset={handleResetFilters}
-        strategies={strategies} 
-      />
+      {location.pathname === "/analytics" || location.pathname === "/messages" ? (
+        <DatePickerOverlay
+          open={filterOpen}
+          onClose={handleFilterClose}
+          onApply={onApplyDateRange}
+          onReset={onResetDateRange}
+        />
+      ) : (
+        <FilterOverlay
+          open={filterOpen}
+          onClose={handleFilterClose}
+          onApply={handleApplyFilters}
+          onReset={handleResetFilters}
+          strategies={strategies}
+        />
+      )}
 
       <CenteredMenuOverlay open={menuOpen} onClose={handleMenuToggle} menuItems={menuItems} />
       {notificationOpen && (

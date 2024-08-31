@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Box, Grid, } from "@mui/material";
+import { Box, Grid } from "@mui/material";
 import TradeCard from "./TradeCard";
 import BottomBar from "./BottomBar";
 import TradeForm from "./TradeForm";
 import TradeCardOverlay from "./TradeCardOverlay";
-import { getUserTrades, getPublicTrades } from "../firebaseRealtimeCrud"; // Import the Realtime CRUD functions
+import { getUserTrades, getPublicTrades, deleteTrade, updateTrade } from "../firebaseRealtimeCrud"; // Import the Realtime CRUD functions
 import { isWithinInterval, parse } from "date-fns"; 
 
 const Dashboard = ({ filters, userId }) => {
@@ -12,6 +12,7 @@ const Dashboard = ({ filters, userId }) => {
   const [selectedTrade, setSelectedTrade] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedEmotion, setSelectedEmotion] = useState(null);
+  const [editingTrade, setEditingTrade] = useState(null); // New state to track editing
 
   // Function to apply filters to trade cards
   const applyFilters = (filters) => {
@@ -85,58 +86,47 @@ const Dashboard = ({ filters, userId }) => {
   // Handling emotion selection and form save actions
   const handleEmotionSelect = (emotion) => {
     setSelectedEmotion(emotion);
+    setEditingTrade(null); // Reset editing state
     setIsFormOpen(true);
   };
 
   const handleFormClose = () => {
     setIsFormOpen(false);
     setSelectedEmotion(null);
+    setEditingTrade(null); // Reset editing state
   };
 
   const handleFormSave = (tradeData) => {
-    const newTradeCard = {
-      ...tradeData,
-      emotion: selectedEmotion,
-      color: getColorForEmotion(selectedEmotion),
-      emoji: getEmojiForEmotion(selectedEmotion),
-    };
-    setTradeCards([newTradeCard, ...tradeCards]);
+    if (editingTrade) {
+      // Update existing trade
+      const updatedTrades = tradeCards.map((trade) =>
+        trade.id === editingTrade.id ? { ...editingTrade, ...tradeData } : trade
+      );
+      setTradeCards(updatedTrades);
+      updateTrade(userId, editingTrade.id, tradeData); // Update in the database
+    } else {
+      // Create a new trade
+      const newTradeCard = {
+        ...tradeData,
+        emotion: selectedEmotion,
+        color: getColorForEmotion(selectedEmotion),
+        emoji: getEmojiForEmotion(selectedEmotion),
+      };
+      setTradeCards([newTradeCard, ...tradeCards]);
+    }
     handleFormClose();
   };
 
-  // Helper functions to get color and emoji based on emotion
-  const getColorForEmotion = (emotion) => {
-    switch (emotion) {
-      case "Anxious":
-        return "#F5BCBB";
-      case "Calm":
-        return "#D0E9BC";
-      case "Confident":
-        return "#B0DCF0";
-      case "Greedy":
-        return "#F5E0B2";
-      case "Frustrated":
-        return "#C1BCBC";
-      default:
-        return "#FFFFFF";
-    }
+  const handleEditTrade = (trade) => {
+    setSelectedEmotion(trade.emotion); // Set emotion to pre-fill form color/emoji
+    setEditingTrade(trade); // Set the trade to be edited
+    setIsFormOpen(true);
   };
 
-  const getEmojiForEmotion = (emotion) => {
-    switch (emotion) {
-      case "Anxious":
-        return "🤯";
-      case "Calm":
-        return "😊";
-      case "Confident":
-        return "😎";
-      case "Greedy":
-        return "🤑";
-      case "Frustrated":
-        return "😠";
-      default:
-        return "😊";
-    }
+  const handleDeleteTrade = (tradeId) => {
+    const updatedTrades = tradeCards.filter((trade) => trade.id !== tradeId);
+    setTradeCards(updatedTrades);
+    deleteTrade(userId, tradeId); // Delete from the database
   };
 
   // Handle card click and overlay close
@@ -167,6 +157,8 @@ const Dashboard = ({ filters, userId }) => {
               <TradeCard
                 {...card}
                 onClick={() => handleTradeCardClick(card)} // Handle card click
+                onEdit={() => handleEditTrade(card)} // Handle edit
+                onDelete={() => handleDeleteTrade(card.id)} // Handle delete
               />
             </Grid>
           ))}
@@ -177,6 +169,8 @@ const Dashboard = ({ filters, userId }) => {
             emotion={selectedEmotion}
             onClose={handleFormClose}
             onSave={handleFormSave}
+            existingTrade={editingTrade} // Pass existing trade data if editing
+            userId={userId} // Pass userId for trade association
           />
         )}
         {selectedTrade && (

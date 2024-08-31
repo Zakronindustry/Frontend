@@ -15,6 +15,7 @@ import Messages from './components/Messages';
 const App = () => {
   const [filters, setFilters] = useState({});
   const [user, setUser] = useState(null); // State to hold user data
+  const [dateRange, setDateRange] = useState(null); // State to hold the selected date range
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -38,12 +39,24 @@ const App = () => {
     setFilters({}); // Reset filters to an empty state
   };
 
+  const handleApplyDateRange = (startDate, endDate) => {
+    setDateRange({ startDate, endDate });
+    console.log("Applied date range:", startDate, endDate);
+  };
+
+  const handleResetDateRange = () => {
+    setDateRange(null);
+    console.log("Reset date range");
+  };
+
   return (
     <Router>
       <TopBar 
         user={user}  // Pass the user data to the TopBar component
         onApplyFilters={handleApplyFilters} 
-        onResetFilters={handleResetFilters} 
+        onResetFilters={handleResetFilters}
+        onApplyDateRange={handleApplyDateRange}
+        onResetDateRange={handleResetDateRange}
       />
       <Routes>
         <Route path="/" element={<Dashboard filters={filters} />} />
@@ -51,8 +64,8 @@ const App = () => {
         <Route path="/user/:userId" element={<UserProfile />} /> {/* Add route for user profile */}
         <Route path="/signup" element={<SignUp />} /> {/* Add SignUp route */}
         <Route path="/login" element={<Login />} />   {/* Add Login route */}
-        <Route path="/analytics" element={<Analytics />} />
-        <Route path="/messages" element={<Messages />}/>
+        <Route path="/analytics" element={<Analytics dateRange={dateRange} />} /> {/* Pass dateRange to Analytics */}
+        <Route path="/messages" element={<Messages dateRange={dateRange} />}/> {/* Pass dateRange to Messages */}
       </Routes>
     </Router>
   );

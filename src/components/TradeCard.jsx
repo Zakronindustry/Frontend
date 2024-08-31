@@ -1,10 +1,36 @@
-import React from 'react';
-import { Card, CardContent, Typography, Box, Chip, IconButton } from '@mui/material';
+import React, { useState } from 'react';
+import { Card, CardContent, Typography, Box, Chip, IconButton, Menu, MenuItem } from '@mui/material';
 import ShareIcon from '@mui/icons-material/Share';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 
-const TradeCard = ({ color, title, symbol, change, price1, price2, quantity, description, time, tags = [], emoji, onClick }) => {
+const TradeCard = ({ color, title, symbol, change, price1, price2, quantity, description, time, tags = [], emoji, onClick, onEdit, onDelete }) => {
   // Ensure that description is safely accessed and fallback to an empty string if undefined
   const truncatedDescription = description && description.length > 60 ? `${description.substring(0, 60)}...` : description || '';
+
+  // State for handling the menu for the options button
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+
+  const handleMenuOpen = (event) => {
+    event.stopPropagation(); // Prevent triggering the card's onClick event
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleEdit = (event) => {
+    event.stopPropagation(); // Prevent triggering the card's onClick event
+    handleMenuClose();
+    onEdit();
+  };
+
+  const handleDelete = (event) => {
+    event.stopPropagation(); // Prevent triggering the card's onClick event
+    handleMenuClose();
+    onDelete();
+  };
 
   return (
     <Card 
@@ -23,20 +49,47 @@ const TradeCard = ({ color, title, symbol, change, price1, price2, quantity, des
       }}
       onClick={onClick} // Add onClick event
     >
-      <IconButton 
-        size="small" 
-        sx={{ 
-          position: 'absolute', 
-          top: 25, 
-          right: 25, 
-          backgroundColor: 'rgba(255, 255, 255, 0.7)', 
-          borderRadius: '50%',
-          zIndex: 10,
-        }}
-        onClick={(e) => e.stopPropagation()} // Prevents triggering the card's onClick event
-      >
-        <ShareIcon fontSize="small" />
-      </IconButton>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%', position: 'absolute', top: 25, right: 25 }}>
+        <IconButton 
+          size="small" 
+          sx={{ 
+            backgroundColor: 'rgba(255, 255, 255, 0.7)', 
+            borderRadius: '50%',
+            zIndex: 10,
+            marginRight: '8px', // Adjust margin between buttons
+          }}
+          onClick={(e) => e.stopPropagation()} // Prevents triggering the card's onClick event
+        >
+          <ShareIcon fontSize="small" />
+        </IconButton>
+
+        <IconButton 
+          size="small" 
+          sx={{ 
+            backgroundColor: 'rgba(255, 255, 255, 0.7)', 
+            borderRadius: '50%',
+            zIndex: 10,
+          }}
+          onClick={handleMenuOpen} // Opens menu on click, prevents event propagation
+        >
+          <MoreVertIcon fontSize="small" />
+        </IconButton>
+
+        <Menu
+          anchorEl={anchorEl}
+          open={open}
+          onClose={handleMenuClose}
+          PaperProps={{
+            style: {
+              borderRadius: '10px',
+              boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.1)',
+            },
+          }}
+        >
+          <MenuItem onClick={handleEdit}>Edit</MenuItem>
+          <MenuItem onClick={handleDelete}>Delete</MenuItem>
+        </Menu>
+      </Box>
 
       <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', position: 'relative', pt: 1 }}>
         <Box sx={{ top: 15, left: 10 }}>

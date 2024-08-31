@@ -5,6 +5,7 @@ import AddIcon from '@mui/icons-material/Add';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import ImageIcon from '@mui/icons-material/Image';
 import SendIcon from '@mui/icons-material/Send';
+import DatePickerOverlay from './DatePickerOverlay'; // Import DatePickerOverlay
 
 const sampleChats = [
   { id: 1, name: 'AxelMathilda', lastMessage: 'Yep, BTC/USD short opportunity this week.', avatar: '/api/placeholder/32/32', isActive: true },
@@ -17,6 +18,7 @@ const sampleChats = [
 const Messages = () => {
   const [activeTab, setActiveTab] = useState('All');
   const [activeChat, setActiveChat] = useState(sampleChats[0]);
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false); // State for Date Picker
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -26,9 +28,23 @@ const Messages = () => {
     setActiveChat(chat);
   };
 
+  const handleDatePickerOpen = () => {
+    setIsDatePickerOpen(true);
+  };
+
+  const handleDatePickerClose = () => {
+    setIsDatePickerOpen(false);
+  };
+
+  const handleApplyDateRange = (startDate, endDate) => {
+    console.log(`Selected date range: ${startDate} - ${endDate}`);
+    // Add your logic here to filter messages based on the selected date range
+    setIsDatePickerOpen(false);
+  };
+
   return (
     <Box sx={{ bgcolor: '#FCF6F1', minHeight: '100vh' }}>
-      <TopBar />
+      <TopBar onDatePickerOpen={handleDatePickerOpen} />
       <Box sx={{ width: '90%', mx: 'auto', pt: '125px' }}>
         <Grid container spacing={3} sx={{ height: 'calc(100vh - 125px)' }}>
           {/* Left Column */}
@@ -141,6 +157,13 @@ const Messages = () => {
           </Grid>
         </Grid>
       </Box>
+
+      {/* Date Picker Overlay */}
+      <DatePickerOverlay 
+        open={isDatePickerOpen} 
+        onClose={handleDatePickerClose} 
+        onApply={handleApplyDateRange} 
+      />
     </Box>
   );
 };
