@@ -42,7 +42,10 @@ export const getNotifications = async (userId) => {
 // Function to mark a notification as read
 export const markNotificationAsRead = async (userId, notificationId) => {
   try {
-    const notificationRef = ref(realtimeDb, `notifications/${userId}/${notificationId}`);
+    const notificationRef = ref(
+      realtimeDb,
+      `notifications/${userId}/${notificationId}`,
+    );
     await update(notificationRef, { read: true });
     console.log("Notification marked as read");
   } catch (error) {
@@ -53,7 +56,10 @@ export const markNotificationAsRead = async (userId, notificationId) => {
 // Function to delete a notification
 export const deleteNotification = async (userId, notificationId) => {
   try {
-    const notificationRef = ref(realtimeDb, `notifications/${userId}/${notificationId}`);
+    const notificationRef = ref(
+      realtimeDb,
+      `notifications/${userId}/${notificationId}`,
+    );
     await remove(notificationRef);
     console.log("Notification deleted successfully");
   } catch (error) {
@@ -64,7 +70,7 @@ export const deleteNotification = async (userId, notificationId) => {
 // Function to create a new public trade
 export const createPublicTrade = async (tradeData) => {
   try {
-    const newTradeRef = push(ref(realtimeDb, 'publicTrades')); // Create a new key for the public trade
+    const newTradeRef = push(ref(realtimeDb, "publicTrades")); // Create a new key for the public trade
     await set(newTradeRef, { ...tradeData, id: newTradeRef.key }); // Save the trade with its unique ID
     console.log("Public trade created successfully");
   } catch (error) {
@@ -86,8 +92,11 @@ export const createPrivateTrade = async (userId, tradeData) => {
 // Function to update an existing trade (private trade)
 export const updateTrade = async (userId, tradeId, updatedData) => {
   try {
-    console.log('Updating trade for userId:', userId);  // Debug userId
-    const tradeRef = ref(realtimeDb, `users/${userId}/privateTrades/${tradeId}`);
+    console.log("Updating trade for userId:", userId); // Debug userId
+    const tradeRef = ref(
+      realtimeDb,
+      `users/${userId}/privateTrades/${tradeId}`,
+    );
     await update(tradeRef, updatedData);
     console.log("Trade updated successfully");
   } catch (error) {
@@ -104,7 +113,7 @@ export const getUserTrades = async (userId) => {
     if (snapshot.exists()) {
       const trades = snapshot.val();
       // Convert the object of trades into an array of trades
-      return Object.keys(trades).map(key => ({ id: key, ...trades[key] }));
+      return Object.keys(trades).map((key) => ({ id: key, ...trades[key] }));
     } else {
       console.log("No trades available");
       return [];
@@ -121,13 +130,14 @@ export const getUserProfile = async (userId) => {
     const userRef = ref(realtimeDb, `users/${userId}`);
     const snapshot = await get(userRef);
     if (snapshot.exists()) {
+      console.log("User data from Firebase:", snapshot.val()); // Debug
       return snapshot.val();
     } else {
-      console.log("No such user!");
+      console.log("No user profile found for this userId.");
       return null;
     }
   } catch (error) {
-    console.error("Error fetching user profile: ", error);
+    console.error("Error fetching user profile:", error);
     return null;
   }
 };
@@ -151,7 +161,7 @@ export const getPublicTrades = async () => {
     if (snapshot.exists()) {
       const trades = snapshot.val();
       // Convert the object of trades into an array of trades
-      return Object.keys(trades).map(key => ({ id: key, ...trades[key] }));
+      return Object.keys(trades).map((key) => ({ id: key, ...trades[key] }));
     } else {
       console.log("No public trades available");
       return [];
@@ -182,20 +192,27 @@ export const flagTrade = async (tradeId, userId) => {
       const updatedFlaggedBy = [...flaggedBy, userId]; // Add the user to the flaggedBy array
 
       // Update the flag count and flaggedBy array
-      await update(tradeRef, { flags: updatedFlags, flaggedBy: updatedFlaggedBy });
+      await update(tradeRef, {
+        flags: updatedFlags,
+        flaggedBy: updatedFlaggedBy,
+      });
 
       // If the trade has been flagged 10 times, ban it
       if (updatedFlags >= 10) {
         await update(tradeRef, { banned: true });
-        console.log(`Trade ${tradeId} has been banned from the Community page.`);
+        console.log(
+          `Trade ${tradeId} has been banned from the Community page.`,
+        );
       } else {
-        console.log(`Trade ${tradeId} flagged ${updatedFlags} times by user ${userId}.`);
+        console.log(
+          `Trade ${tradeId} flagged ${updatedFlags} times by user ${userId}.`,
+        );
       }
     } else {
       console.log(`Trade ${tradeId} not found.`);
     }
   } catch (error) {
-    console.error('Error flagging trade:', error);
+    console.error("Error flagging trade:", error);
   }
 };
 
@@ -208,8 +225,8 @@ export const getUserPublicTrades = async (userId) => {
       const allTrades = snapshot.val();
       // Filter trades that belong to the specific user
       const userTrades = Object.keys(allTrades)
-        .filter(key => allTrades[key].userId === userId)
-        .map(key => ({ id: key, ...allTrades[key] }));
+        .filter((key) => allTrades[key].userId === userId)
+        .map((key) => ({ id: key, ...allTrades[key] }));
       return userTrades;
     } else {
       console.log("No public trades available");
@@ -224,8 +241,8 @@ export const getUserPublicTrades = async (userId) => {
 // Function to update a user's profile (using Firestore)
 export const updateUserProfile = async (uid, data) => {
   try {
-    const userRef = doc(db, 'users', uid);  // Firestore reference to the user document
-    await updateDoc(userRef, data);  // Updating the user document
+    const userRef = doc(db, "users", uid); // Firestore reference to the user document
+    await updateDoc(userRef, data); // Updating the user document
     console.log("User profile updated successfully");
   } catch (error) {
     console.error("Error updating user profile: ", error);
@@ -235,10 +252,10 @@ export const updateUserProfile = async (uid, data) => {
 // Function to delete a user's account (using Firestore & Firebase Auth)
 export const deleteUserAccount = async (uid) => {
   try {
-    const user = auth.currentUser;  // Get the currently authenticated user
+    const user = auth.currentUser; // Get the currently authenticated user
     if (user && user.uid === uid) {
-      await deleteDoc(doc(db, 'users', uid));  // Delete user document from Firestore
-      await user.delete();  // Delete user from Firebase Authentication
+      await deleteDoc(doc(db, "users", uid)); // Delete user document from Firestore
+      await user.delete(); // Delete user from Firebase Authentication
       console.log("User account deleted successfully");
     }
   } catch (error) {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Box, Grid } from "@mui/material";
+import { Box, Grid, CircularProgress } from "@mui/material";
 import TradeCard from "./TradeCard";
 import BottomBar from "./BottomBar";
 import TradeForm from "./TradeForm";
@@ -9,8 +9,11 @@ import {
   getPublicTrades,
   deleteTrade,
   updateTrade,
+  createPrivateTrade,
 } from "../firebaseRealtimeCrud"; // Import the Realtime CRUD functions
 import { isWithinInterval, parse } from "date-fns";
+import { ref, push } from "firebase/database"; // Firebase functions
+import { realtimeDb } from "../firebase"; // Firebase database
 
 const Dashboard = ({ filters, userId }) => {
   const [tradeCards, setTradeCards] = useState([]);
@@ -18,10 +21,39 @@ const Dashboard = ({ filters, userId }) => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedEmotion, setSelectedEmotion] = useState(null);
   const [editingTrade, setEditingTrade] = useState(null); // New state to track editing
+  const [loading, setLoading] = useState(true); // New state to track loading
 
   useEffect(() => {
-    console.log('userId in Dashboard:', userId);  // Check if userId is available
+    console.log('userId in Dashboard:', userId); // Debugging to ensure userId is passed correctly
   }, [userId]);
+
+  useEffect(() => {
+    if (!userId) {
+      return; // Don't run if userId is undefined
+    }
+    // Fetch trades data
+    const fetchTrades = async () => {
+      try {
+        const privateTrades = await getUserTrades(userId);
+        const publicTrades = await getPublicTrades();
+        setTradeCards([
+          ...Object.values(privateTrades || {}),
+          ...Object.values(publicTrades || {}),
+        ]);
+      } catch (error) {
+        console.error("Error fetching trades:", error);
+      }
+      setLoading(false); // Stop loading after fetching trades
+    };
+
+    fetchTrades();
+  }, [userId]);
+
+  useEffect(() => {
+    if (filters) {
+      applyFilters(filters);
+    }
+  }, [filters]);
 
   // Function to apply filters to trade cards
   const applyFilters = (filters) => {
@@ -75,30 +107,6 @@ const Dashboard = ({ filters, userId }) => {
     setTradeCards(filteredCards);
   };
 
-  // Fetch trades data
-  useEffect(() => {
-    const fetchTrades = async () => {
-      try {
-        const privateTrades = await getUserTrades(userId);
-        const publicTrades = await getPublicTrades();
-        setTradeCards([
-          ...Object.values(privateTrades || {}),
-          ...Object.values(publicTrades || {}),
-        ]);
-      } catch (error) {
-        console.error("Error fetching trades:", error);
-      }
-    };
-
-    fetchTrades();
-  }, [userId]);
-
-  useEffect(() => {
-    if (filters) {
-      applyFilters(filters);
-    }
-  }, [filters]);
-
   // Handling emotion selection and form save actions
   const handleEmotionSelect = (emotion) => {
     setSelectedEmotion(emotion);
@@ -150,7 +158,6 @@ const Dashboard = ({ filters, userId }) => {
     deleteTrade(userId, tradeId); // Delete from the database
   };
 
-  // Handle card click and overlay close
   const handleTradeCardClick = (trade) => {
     setSelectedTrade(trade);
   };
@@ -158,6 +165,14 @@ const Dashboard = ({ filters, userId }) => {
   const handleOverlayClose = () => {
     setSelectedTrade(null);
   };
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box

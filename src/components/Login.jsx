@@ -2,14 +2,35 @@ import React from "react";
 import { Box, Typography, Button } from "@mui/material";
 import { signInWithPopup } from "firebase/auth";
 import { auth, provider } from "../firebase";
+import { useNavigate } from "react-router-dom"; // For navigation
 import GoogleIcon from '@mui/icons-material/Google'; // Material UI Google Icon
-import CarouselImage from "./Login.svg"; // Import the actual path to your carousel SVG image
+import CarouselImage from "./Login.svg"; // Path to SVG image
+import { ref, set } from "firebase/database";
+import { realtimeDb } from "../firebase"; // Import Realtime Database
 
 const Login = () => {
+  const navigate = useNavigate(); // Initialize navigate hook
+
+  // Function to store user data in Firebase Realtime Database
+  const storeUserInDb = (user) => {
+    const userRef = ref(realtimeDb, `users/${user.uid}`); // Firebase path: users/<userId>
+    set(userRef, {
+      userId: user.displayName,  // Use displayName from Google as userId in your platform
+      email: user.email,
+      avatar: user.photoURL,
+    });
+  };
+
   const handleGoogleLogin = async () => {
     try {
       const result = await signInWithPopup(auth, provider);
       console.log("User logged in:", result.user);
+
+      // Store user data in Firebase Realtime Database
+      storeUserInDb(result.user);
+
+      // Redirect to the Dashboard after successful login
+      navigate("/"); // Assuming "/" is the Dashboard route
     } catch (error) {
       console.error("Error logging in with Google:", error);
     }
@@ -24,7 +45,7 @@ const Login = () => {
         justifyContent: 'center',
         alignItems: 'center',
         flexDirection: 'column',
-        padding: '20px',
+        padding: '10px',
         textAlign: 'center',
       }}
     >
@@ -36,13 +57,13 @@ const Login = () => {
         sx={{
           maxWidth: '100%',
           height: 'auto',
-          marginBottom: '0px', // You can adjust the margin as needed
+          marginBottom: '0px',
         }}
       />
 
       {/* Welcome Text */}
-      <Box>
-        <Typography variant="h3" sx={{ fontWeight: 'bold', marginBottom: '10px', fontFamily: 'Montserat' }}>
+      <Box sx={{ marginBottom: '10px' }}>
+        <Typography variant="h3" sx={{ fontWeight: 'bold', fontFamily: 'Montserat' }}>
           Welcome to Pal 👋
         </Typography>
         <Typography variant="body1" sx={{ color: 'gray', marginBottom: '20px', fontFamily: 'Montserat' }}>

@@ -25,7 +25,6 @@ import {
   Menu,
   FilterList,
   Close,
-  Add,
   Message,
   MoreHoriz,
 } from "@mui/icons-material";
@@ -135,6 +134,8 @@ const CenteredMenuOverlay = ({ open, onClose, menuItems }) => (
 
 const TopBar = ({
   user,
+  userId,
+  avatar,
   profileData,
   onApplyFilters,
   onApplyDateRange,
@@ -222,6 +223,12 @@ const TopBar = ({
     handleFilterClose();
   };
 
+  // Debugging: Check if userId and avatar are being passed
+  useEffect(() => {
+    console.log("TopBar userId:", userId); // Check userId received
+    console.log("TopBar avatar:", avatar); // Check avatar received
+  }, [userId, avatar]);
+
   const handleAvatarClick = () => {
     navigate("/profile-settings"); // Navigate to the profile settings page
   };
@@ -229,7 +236,7 @@ const TopBar = ({
   const getTitle = () => {
     switch (location.pathname) {
       case "/":
-        return `Hi 👋 ${user?.userId || "User"}`; // Greet with user ID on the Dashboard
+        return `Hi 👋 ${user?.userId || userId}`; // Greet with user ID on the Dashboard
       case "/community":
         return "Community";
       case "/analytics":
@@ -296,12 +303,11 @@ const TopBar = ({
                   sx={{
                     width: "51px",
                     height: "51px",
-                    background:
-                      "linear-gradient(180deg, #FCEBDE 0%, #F7D3BA 100%)",
+                    background: "linear-gradient(180deg, #FCEBDE 0%, #F7D3BA 100%)",
                     border: "2px solid #FFFFFF",
                   }}
-                  src={profileData?.avatar || "avatar"}
-                  alt={profileData?.userName || "User"}
+                  src={profileData?.avatar || avatar}
+                  alt={profileData?.userName || userId}
                 />
                 {!isMobile && !isTablet && (
                   <Box
@@ -324,9 +330,6 @@ const TopBar = ({
                 sx={{ display: "flex", alignItems: "center", ml: 2, gap: 1 }}
               >
                 <IconButton sx={buttonStyle}>
-                  <Add />
-                </IconButton>
-                <IconButton sx={buttonStyle}>
                   <Message />
                 </IconButton>
                 <IconButton sx={buttonStyle}>
@@ -346,8 +349,8 @@ const TopBar = ({
                         "linear-gradient(180deg, #FCEBDE 0%, #F7D3BA 100%)",
                       border: "2px solid #FFFFFF",
                     }}
-                    src={user?.avatar || "avatar"}
-                    alt={user?.userId || "User"}
+                    src={user?.avatar || avatar} // Updated to reflect the avatar from the user prop
+                    alt={user?.userId || userId}  // Display userId from the user prop
                   />
                 </IconButton>
                 {!isMobile && !isTablet && (
