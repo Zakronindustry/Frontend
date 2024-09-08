@@ -1,72 +1,99 @@
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import TopBar from './components/TopBar';
-import Dashboard from './components/Dashboard';
-import CommunityPage from './components/Community';
-import UserProfile from './UserProfile';
-import SignUp from "./components/Signup";
-import Login from "./components/Login";    // Import Login component
 import { getUserProfile } from "./firebaseRealtimeCrud";
 import { auth } from './firebase';  // Import Firebase auth
-import SeedData from "./components/SeedData";
-import Analytics from './components/Analytics';
-import Messages from './components/Messages';
+import { onAuthStateChanged } from "firebase/auth";  // Listen for auth state changes
+import CircularProgress from '@mui/material/CircularProgress';
+import SeedData from './components/SeedData';
 
-const App = () => {
+// Lazy load components
+const Dashboard = lazy(() => import('./components/Dashboard'));
+const CommunityPage = lazy(() => import('./components/Community'));
+const UserProfile = lazy(() => import('./UserProfile'));
+const SignUp = lazy(() => import('./components/Signup'));
+const Login = lazy(() => import('./components/Login'));
+const Analytics = lazy(() => import('./components/Analytics'));
+const Messages = lazy(() => import('./components/Messages'));
+const ProfileSettingsPage = lazy(() => import('./components/ProfileSettingsPage'));
+
+// Function to check if we are on the login page
+const AppWrapper = () => {
+  const location = useLocation();
   const [filters, setFilters] = useState({});
-  const [user, setUser] = useState(null); // State to hold user data
-  const [dateRange, setDateRange] = useState(null); // State to hold the selected date range
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [dateRange, setDateRange] = useState(null);
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      const currentUser = auth.currentUser;
+    // Listen for changes to the user's authentication state
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
-        const userData = await getUserProfile(currentUser.uid);  // Fetch user data based on the logged-in user's ID
+        const userData = await getUserProfile(currentUser.uid);  // Fetch user profile from Firebase
         setUser(userData);
+      } else {
+        setUser(null);  // No user is logged in
       }
-    };
+      setLoading(false);  // Stop showing loading once we know the user's state
+    });
 
-    fetchUserData();
+    return () => unsubscribe();  // Cleanup the listener on unmount
   }, []);
 
   const handleApplyFilters = (newFilters) => {
-    console.log("Setting filters:", newFilters);
     setFilters(newFilters);
   };
 
   const handleResetFilters = () => {
-    console.log("Resetting filters");
-    setFilters({}); // Reset filters to an empty state
+    setFilters({});
   };
 
   const handleApplyDateRange = (startDate, endDate) => {
     setDateRange({ startDate, endDate });
-    console.log("Applied date range:", startDate, endDate);
   };
 
   const handleResetDateRange = () => {
     setDateRange(null);
-    console.log("Reset date range");
   };
 
+  // Conditionally render TopBar based on the current route
+  const showTopBar = location.pathname !== '/login';
+
+  return (
+    <>
+      {showTopBar && (
+        <TopBar
+          user={user}  // Pass the user data to the TopBar
+          onApplyFilters={handleApplyFilters}
+          onResetFilters={handleResetFilters}
+          onApplyDateRange={handleApplyDateRange}
+          onResetDateRange={handleResetDateRange}
+        />
+      )}
+      <Suspense fallback={<CircularProgress />}>
+        <Routes>
+          {/* Protected routes */}
+          <Route path="/" element={<Dashboard filters={filters} userId={user?.userId} />} />
+          <Route path="/community" element={<CommunityPage filters={filters} />} />
+          <Route path="/user/:userId" element={<UserProfile />} />
+          <Route path="/analytics" element={<Analytics dateRange={dateRange} />} />
+          <Route path="/messages" element={<Messages dateRange={dateRange} />} />
+          <Route path="/profile-settings" element={<ProfileSettingsPage user={user} />} />
+
+          {/* Public routes */}
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/seed-data" element={<SeedData />} />
+        </Routes>
+      </Suspense>
+    </>
+  );
+};
+
+const App = () => {
   return (
     <Router>
-      <TopBar 
-        user={user}  // Pass the user data to the TopBar component
-        onApplyFilters={handleApplyFilters} 
-        onResetFilters={handleResetFilters}
-        onApplyDateRange={handleApplyDateRange}
-        onResetDateRange={handleResetDateRange}
-      />
-      <Routes>
-        <Route path="/" element={<Dashboard filters={filters} />} />
-        <Route path="/community" element={<CommunityPage filters={filters} />} />
-        <Route path="/user/:userId" element={<UserProfile />} /> {/* Add route for user profile */}
-        <Route path="/signup" element={<SignUp />} /> {/* Add SignUp route */}
-        <Route path="/login" element={<Login />} />   {/* Add Login route */}
-        <Route path="/analytics" element={<Analytics dateRange={dateRange} />} /> {/* Pass dateRange to Analytics */}
-        <Route path="/messages" element={<Messages dateRange={dateRange} />}/> {/* Pass dateRange to Messages */}
-      </Routes>
+      <AppWrapper />
     </Router>
   );
 };

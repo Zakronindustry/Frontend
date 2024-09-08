@@ -90,32 +90,27 @@ const TradeForm = ({ emotion, onClose, onSave, onAddStrategy, userId, existingTr
       time,
       reason: trimmedTitle,
       description: trimmedDescription,
-      isPublic, // Save the public/private state
-      tags, // Save the generated tags
-      emoji: getEmotionEmoji(),  // Include emoji
-      color: getEmotionColor(),  // Include color
-      userId // Associate trade with user
+      isPublic,
+      tags,
+      emoji: getEmotionEmoji(),
+      color: getEmotionColor(),
+      userId,  // Ensure userId is correctly included
     };
-
-    onAddStrategy(strategy); // Add the strategy to the list
 
     try {
       if (existingTrade) {
-        // If editing, update the existing trade
-        await updateTrade(userId, existingTrade.id, tradeData); // Assuming updateTrade is a function in your Firebase CRUD file
+        await updateTrade(userId, existingTrade.id, tradeData); // Ensure userId is passed here
       } else {
-        // If not editing, create a new trade
         if (isPublic) {
           await createPublicTrade(tradeData); // Save as public trade
         } else {
           await createPrivateTrade(userId, tradeData); // Save as private trade
         }
       }
-      onSave(tradeData); // Optional: Pass saved data back to parent
-      onClose(); // Close the form
+      onSave(tradeData);
+      onClose();
     } catch (error) {
       console.error("Error saving trade: ", error);
-      // Handle the error as needed, e.g., show an alert or message to the user
     }
   };
 

@@ -6,7 +6,14 @@ export default {
     "./node_modules/@shadcn/ui/dist/**/*.js",
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        popins: ["Poppins", "sans-serif"],
+        inter: ["Inter", "sans-serif"],
+        orbitron: ["Orbitron", "sans-serif"],
+        roboto: ["Roboto", "sans-serif"],
+        },
+    },
   },
   plugins: [
     require("@tailwindcss/forms"),

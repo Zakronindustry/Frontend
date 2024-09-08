@@ -3,11 +3,10 @@ import { Box, Typography, Card, IconButton, Chip, Avatar, TextField, Button, Men
 import CloseIcon from '@mui/icons-material/Close';
 import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import ThumbDownIcon from '@mui/icons-material/ThumbDown';
-import ShareIcon from '@mui/icons-material/Share';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import SendIcon from '@mui/icons-material/Send';
 import { Link } from 'react-router-dom'; // Import Link from react-router-dom
-import { updateTrade, flagTrade } from '../firebaseRealtimeCrud'; // Import necessary functions from your Firebase CRUD module
+import { updateTrade, flagTrade, updateUserProfile } from '../firebaseRealtimeCrud'; // Ensure updateTrade, flagTrade, and updateUserProfile are imported
 
 const PublicTradeCardOverlay = ({ card, onClose, userId }) => {
   const [likes, setLikes] = useState(card.likes || 0);
@@ -15,18 +14,7 @@ const PublicTradeCardOverlay = ({ card, onClose, userId }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
 
-  const handleLike = async () => {
-    const newLikes = likes + 1;
-    setLikes(newLikes);
-    await updateTrade(card.userId, card.id, { likes: newLikes });
-  };
-
-  const handleDislike = async () => {
-    const newDislikes = dislikes + 1;
-    setDislikes(newDislikes);
-    await updateTrade(card.userId, card.id, { dislikes: newDislikes });
-  };
-
+  // Handle the menu open/close logic
   const handleMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -35,8 +23,58 @@ const PublicTradeCardOverlay = ({ card, onClose, userId }) => {
     setAnchorEl(null);
   };
 
+  // Handle liking the trade
+  const handleLike = async () => {
+    const newLikes = likes + 1;
+    setLikes(newLikes);
+    await updateTrade(card.userId, card.id, { likes: newLikes });
+  };
+
+  // Handle disliking the trade
+  const handleDislike = async () => {
+    const newDislikes = dislikes + 1;
+    setDislikes(newDislikes);
+    await updateTrade(card.userId, card.id, { dislikes: newDislikes });
+  };
+
+  // Handle sharing the trade
+  const handleShare = () => {
+    const cardLink = `${window.location.origin}/publicTrades/${card.id}`;
+    navigator.clipboard.writeText(cardLink);
+    alert('Link copied to clipboard');
+    handleMenuClose();
+  };
+
+  // Handle bookmarking the trade
+  const handleBookmark = async () => {
+    try {
+      const userProfile = await getUserProfile(userId); // Fetch the user's profile
+      const bookmarks = userProfile.bookmarks || [];
+
+      // Check if the card is already bookmarked
+      const isBookmarked = bookmarks.some(bookmark => bookmark.id === card.id);
+      if (isBookmarked) {
+        alert('This trade is already bookmarked.');
+      } else {
+        const newBookmark = { id: card.id, title: card.title, emoji: card.emoji, description: card.description, color: card.color, tags: card.tags };
+        const updatedBookmarks = [...bookmarks, newBookmark];
+
+        // Update Firebase
+        await updateUserProfile(userId, { bookmarks: updatedBookmarks });
+        alert('Trade bookmarked');
+      }
+
+      handleMenuClose();
+    } catch (error) {
+      console.error('Error bookmarking trade:', error);
+      alert('Error occurred while bookmarking.');
+    }
+  };
+
+  // Handle flagging the trade
   const handleFlagTrade = async () => {
-    await flagTrade(card.id, userId); // Pass the userId when flagging the trade
+    await flagTrade(card.id, userId); // Flagging the trade with the user's ID
+    alert('Trade flagged');
     handleMenuClose();
   };
 
@@ -47,8 +85,8 @@ const PublicTradeCardOverlay = ({ card, onClose, userId }) => {
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: 'rgba(255, 255, 255, 0.1)', // Slight white tint
-      backdropFilter: 'blur(10px)', // Blur effect
+      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+      backdropFilter: 'blur(10px)',
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
@@ -58,14 +96,13 @@ const PublicTradeCardOverlay = ({ card, onClose, userId }) => {
       <Card sx={{ 
         maxWidth: '1000px', 
         width: '100%', 
-        height: '95vh',  // Fixed height
-        borderRadius: '20px', 
+        height: '95vh',
+        borderRadius: '20px',
         display: 'flex',
         flexDirection: 'row',
         position: 'relative',
-        overflow: 'hidden' // Ensures the content fits within the card
+        overflow: 'hidden'
       }}>
-
         {/* Trade Overview Section */}
         <Box sx={{ 
           width: '55%', 
@@ -76,10 +113,7 @@ const PublicTradeCardOverlay = ({ card, onClose, userId }) => {
           borderRadius: '20px 0 0 20px',
           overflowY: 'auto'
         }}>
-          <Box sx={{ 
-            fontSize: '3rem',
-            marginBottom: '10px'
-          }}>
+          <Box sx={{ fontSize: '3rem', marginBottom: '10px' }}>
             {card.emoji}
           </Box>
 
@@ -120,11 +154,7 @@ const PublicTradeCardOverlay = ({ card, onClose, userId }) => {
                 key={index} 
                 label={tag} 
                 size="small" 
-                sx={{ 
-                  backgroundColor: 'rgba(255,255,255,0.7)', 
-                  fontSize: '0.7rem',
-                  height: '20px',
-                }} 
+                sx={{ backgroundColor: 'rgba(255,255,255,0.7)', fontSize: '0.7rem', height: '20px' }} 
               />
             ))}
           </Box>
@@ -152,9 +182,6 @@ const PublicTradeCardOverlay = ({ card, onClose, userId }) => {
               <Typography variant="caption">{dislikes}</Typography>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <IconButton>
-                <ShareIcon fontSize="small" />
-              </IconButton>
               <IconButton onClick={handleMenuOpen}>
                 <MoreVertIcon fontSize="small" />
               </IconButton>
@@ -169,6 +196,8 @@ const PublicTradeCardOverlay = ({ card, onClose, userId }) => {
                   },
                 }}
               >
+                <MenuItem onClick={handleShare}>Share</MenuItem>
+                <MenuItem onClick={handleBookmark}>Bookmark</MenuItem>
                 <MenuItem onClick={handleFlagTrade}>Flag Trade</MenuItem>
               </Menu>
               <IconButton onClick={onClose}>

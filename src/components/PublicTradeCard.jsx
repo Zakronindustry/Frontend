@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { Card, CardContent, Typography, Box, Chip, IconButton } from '@mui/material';
-import ShareIcon from '@mui/icons-material/Share';
+import { Card, CardContent, Typography, Box, Chip, IconButton, Menu, MenuItem } from '@mui/material';
 import ThumbUpIcon from '@mui/icons-material/ThumbUp'; 
 import ThumbDownIcon from '@mui/icons-material/ThumbDown';
 import MailIcon from '@mui/icons-material/Mail';
-import PublicTradeCardOverlay from './PublicTradeCardOverlay';
+import MoreHorizOutlinedIcon from '@mui/icons-material/MoreHorizOutlined';
 import { ref, update } from "firebase/database"; // Import from Realtime Database
 import { realtimeDb } from "../firebase"; // Import your Realtime Database instance
+import { getUserProfile, updateUserProfile, flagTrade } from '../firebaseRealtimeCrud'; // Import your Firebase CRUD
+import PublicTradeCardOverlay from './PublicTradeCardOverlay';  // Adjust the path if necessary
 
 const PublicTradeCard = ({ 
   id, 
@@ -17,19 +18,38 @@ const PublicTradeCard = ({
   price1, 
   price2, 
   quantity, 
-  description = '', // Default to an empty string if undefined
+  description = '', 
   time, 
-  tags = [], // Default to an empty array if undefined
+  tags = [], 
   emoji, 
   likes: initialLikes, 
   comments,
-  commentsList = [],  // Default to an empty array if undefined
+  commentsList = [],
   userId 
 }) => {
   const [likes, setLikes] = useState(initialLikes);
   const [liked, setLiked] = useState(false);
   const [disliked, setDisliked] = useState(false);
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null); // Anchor for the menu
+  const truncatedDescription =
+    description && description.length > 60
+      ? `${description.substring(0, 60)}...`
+      : description || "";
+
+  const truncatedTitle =
+    title && title.length > 35
+      ? `${title.substring(0, 35)}...`
+      : title || "";
+
+  // Handle opening and closing of the three-dot menu
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
 
   const handleLike = async () => {
     let newLikes = likes;
@@ -75,12 +95,58 @@ const PublicTradeCard = ({
     }
   };
 
+  // Handle comment overlay opening
   const handleCommentClick = () => {
     setIsOverlayOpen(true);
   };
 
   const handleOverlayClose = () => {
     setIsOverlayOpen(false);
+  };
+
+  // Handle share action (copy link to clipboard)
+  const handleShare = () => {
+    const cardLink = `${window.location.origin}/publicTrades/${id}`;
+    navigator.clipboard.writeText(cardLink);
+    alert("Link copied to clipboard");
+    handleMenuClose();
+  };
+
+  const handleBookmark = async () => {
+    try {
+      // Retrieve the user profile
+      const userProfile = await getUserProfile(userId); // Assume userId is passed as a prop
+      const bookmarks = userProfile.bookmarks || [];  // Existing bookmarks or an empty array
+
+      // Check if this trade is already bookmarked
+      const isBookmarked = bookmarks.some(bookmark => bookmark.id === id);
+      if (isBookmarked) {
+        alert("This trade is already bookmarked.");
+        handleMenuClose();
+        return;
+      }
+
+      // Add the new bookmark
+      const newBookmark = { id, title, emoji, description, color, tags };
+
+      // Update the user's bookmarks
+      const updatedBookmarks = [...bookmarks, newBookmark];
+
+      // Update the user profile in Firebase
+      await updateUserProfile(userId, { bookmarks: updatedBookmarks });
+
+      alert("Trade bookmarked");
+      handleMenuClose();
+    } catch (error) {
+      console.error("Error bookmarking trade:", error);
+    }
+  };
+
+  // Handle flagging a trade
+  const handleFlag = async () => {
+    await flagTrade(id, userId); // Assuming flagTrade increments the flag count
+    alert("Trade flagged");
+    handleMenuClose();
   };
 
   return (
@@ -110,6 +176,8 @@ const PublicTradeCard = ({
             >
               {emoji}
             </Typography>
+
+            {/* Three-dot menu */}
             <IconButton 
               size="small" 
               sx={{ 
@@ -120,14 +188,31 @@ const PublicTradeCard = ({
                 borderRadius: '50%',
                 zIndex: 10,
               }}
-              onClick={(e) => e.stopPropagation()} // Prevents triggering the card's onClick event
+              onClick={handleMenuOpen}
             >
-              <ShareIcon fontSize="small" />
+              <MoreHorizOutlinedIcon fontSize="small" />
             </IconButton>
+
+            {/* Menu for Share, Bookmark, and Flag options */}
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleMenuClose}
+              PaperProps={{
+                style: {
+                  borderRadius: "10px",
+                  boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
+                },
+              }}
+            >
+              <MenuItem onClick={handleShare}>Share</MenuItem>
+              <MenuItem onClick={handleBookmark}>Bookmark</MenuItem>
+              <MenuItem onClick={handleFlag}>Flag</MenuItem>
+            </Menu>
           </Box>
 
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1, mt: 1 }}>
-            <Typography variant="h6" sx={{ fontWeight: 'semibold', fontSize: '1.2rem', maxWidth: '100%' }}>{title}</Typography>
+            <Typography variant="h6" sx={{ fontWeight: 'semibold', fontSize: '1.2rem', maxWidth: '100%' }}>{truncatedTitle}</Typography>
           </Box>
 
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 1 }}>
@@ -158,7 +243,7 @@ const PublicTradeCard = ({
           </Box>
 
           <Typography variant="body2" sx={{ mb: 2, fontSize: '0.9rem', fontStyle: 'italic', flexGrow: 1 }}>
-            {description.length > 80 ? `${description.slice(0, 80)}...` : description}
+            {truncatedDescription}
           </Typography>
 
           <Box sx={{ mt: 'auto' }}>
@@ -179,6 +264,7 @@ const PublicTradeCard = ({
             </Box>
           </Box>
         </CardContent>
+
         <Box 
           sx={{ 
             display: 'flex', 

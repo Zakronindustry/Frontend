@@ -13,6 +13,7 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
+  CircularProgress,
 } from "@mui/material";
 import {
   Notifications,
@@ -26,35 +27,12 @@ import {
   Close,
   Add,
   Message,
-  Share,
-  MoreVert,
+  MoreHoriz,
 } from "@mui/icons-material";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom"; // Import useNavigate
 import FilterOverlay from "./FilterOverlay";
-import DatePickerOverlay from "./DatePickerOverlay"; // Import DatePickerOverlay
-import NotificationOverlay from "./NotificationOverlay"; // Import the notification overlay component
-import { getNotifications, markNotificationAsRead } from "../firebaseRealtimeCrud"; // Import Firebase functions
-
-const IconButtonContainer = ({ to, children, isActive }) => (
-  <NavLink to={to} style={{ textDecoration: "none" }}>
-    <Box
-      sx={{
-        width: "51px",
-        height: "51px",
-        background: isActive ? "#FFFFFF" : "transparent",
-        borderRadius: "50%",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        mx: 1,
-      }}
-    >
-      <IconButton size="large" sx={{ color: isActive ? "black" : "white" }}>
-        {children}
-      </IconButton>
-    </Box>
-  </NavLink>
-);
+import DatePickerOverlay from "./DatePickerOverlay";
+import NotificationOverlay from "./NotificationOverlay";
 
 const SearchOverlay = ({ open, onClose }) => (
   <Box
@@ -64,8 +42,8 @@ const SearchOverlay = ({ open, onClose }) => (
       left: 0,
       width: "100%",
       height: "100%",
-      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-      backdropFilter: 'blur(10px)',
+      backgroundColor: "rgba(255, 255, 255, 0.1)",
+      backdropFilter: "blur(10px)",
       zIndex: 1300,
       display: open ? "flex" : "none",
       alignItems: "center",
@@ -95,6 +73,27 @@ const SearchOverlay = ({ open, onClose }) => (
       </IconButton>
     </Box>
   </Box>
+);
+
+const IconButtonContainer = ({ to, children, isActive }) => (
+  <NavLink to={to} style={{ textDecoration: "none" }}>
+    <Box
+      sx={{
+        width: "51px",
+        height: "51px",
+        background: isActive ? "#FFFFFF" : "transparent",
+        borderRadius: "50%",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        mx: 1,
+      }}
+    >
+      <IconButton size="large" sx={{ color: isActive ? "black" : "white" }}>
+        {children}
+      </IconButton>
+    </Box>
+  </NavLink>
 );
 
 const CenteredMenuOverlay = ({ open, onClose, menuItems }) => (
@@ -134,13 +133,23 @@ const CenteredMenuOverlay = ({ open, onClose, menuItems }) => (
   </Dialog>
 );
 
-const TopBar = ({ user, profileData, onApplyFilters, onApplyDateRange, onResetDateRange, strategies }) => {
+const TopBar = ({
+  user,
+  profileData,
+  onApplyFilters,
+  onApplyDateRange,
+  onResetDateRange,
+  strategies,
+}) => {
   const location = useLocation();
+  const navigate = useNavigate(); // Initialize navigate
   const [searchOpen, setSearchOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [isOverlayOpen, setIsOverlayOpen] = useState(false);
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
@@ -153,7 +162,12 @@ const TopBar = ({ user, profileData, onApplyFilters, onApplyDateRange, onResetDa
 
   const fetchNotifications = async () => {
     const fetchedNotifications = await getNotifications(user.userId);
-    setNotifications(Object.entries(fetchedNotifications || {}).map(([id, data]) => ({ id, ...data })));
+    setNotifications(
+      Object.entries(fetchedNotifications || {}).map(([id, data]) => ({
+        id,
+        ...data,
+      })),
+    );
   };
 
   const handleNotificationClick = () => {
@@ -167,9 +181,13 @@ const TopBar = ({ user, profileData, onApplyFilters, onApplyDateRange, onResetDa
   const handleMarkAsRead = async (notificationId) => {
     if (user?.userId) {
       await markNotificationAsRead(user.userId, notificationId);
-      setNotifications(notifications.map(notification => 
-        notification.id === notificationId ? { ...notification, read: true } : notification
-      ));
+      setNotifications(
+        notifications.map((notification) =>
+          notification.id === notificationId
+            ? { ...notification, read: true }
+            : notification,
+        ),
+      );
     }
   };
 
@@ -204,6 +222,10 @@ const TopBar = ({ user, profileData, onApplyFilters, onApplyDateRange, onResetDa
     handleFilterClose();
   };
 
+  const handleAvatarClick = () => {
+    navigate("/profile-settings"); // Navigate to the profile settings page
+  };
+
   const getTitle = () => {
     switch (location.pathname) {
       case "/":
@@ -214,6 +236,8 @@ const TopBar = ({ user, profileData, onApplyFilters, onApplyDateRange, onResetDa
         return "Analytics";
       case "/messages":
         return "Messages";
+      case "/profile-settings":
+        return "Profile";
       default:
         return "";
     }
@@ -228,13 +252,13 @@ const TopBar = ({ user, profileData, onApplyFilters, onApplyDateRange, onResetDa
 
   const buttonStyle = {
     color: "white",
-    bgcolor: 'rgba(255, 255, 255, 0.1)',
-    border: '1px solid rgba(255, 255, 255, 0.3)',
-    borderRadius: '50%',
+    bgcolor: "rgba(255, 255, 255, 0.1)",
+    border: "1px solid rgba(255, 255, 255, 0.3)",
+    borderRadius: "50%",
     width: 40,
     height: 40,
-    '&:hover': {
-      bgcolor: 'rgba(255, 255, 255, 0.2)',
+    "&:hover": {
+      bgcolor: "rgba(255, 255, 255, 0.2)",
     },
   };
 
@@ -259,28 +283,30 @@ const TopBar = ({ user, profileData, onApplyFilters, onApplyDateRange, onResetDa
         <Box
           sx={{
             display: "flex",
-            justifyContent: "flex-start", // Align items to the left
+            justifyContent: "flex-start",
             alignItems: "center",
             height: "100%",
             px: "10px",
           }}
         >
           {location.pathname.includes("/user/") ? (
-            // Display profile avatar and name of the visited user
             <>
               <Box sx={{ display: "flex", alignItems: "center" }}>
                 <Avatar
                   sx={{
                     width: "51px",
                     height: "51px",
-                    background: "linear-gradient(180deg, #FCEBDE 0%, #F7D3BA 100%)",
+                    background:
+                      "linear-gradient(180deg, #FCEBDE 0%, #F7D3BA 100%)",
                     border: "2px solid #FFFFFF",
                   }}
                   src={profileData?.avatar || "avatar"}
                   alt={profileData?.userName || "User"}
                 />
                 {!isMobile && !isTablet && (
-                  <Box sx={{ display: "flex", alignItems: "center", ml: "15px" }}>
+                  <Box
+                    sx={{ display: "flex", alignItems: "center", ml: "15px" }}
+                  >
                     <Typography
                       sx={{
                         fontSize: isMobile ? "18px" : "22px",
@@ -289,12 +315,14 @@ const TopBar = ({ user, profileData, onApplyFilters, onApplyDateRange, onResetDa
                         fontWeight: 600,
                       }}
                     >
-                      {profileData?.userName || "User"} {/* Render the profile name */}
+                      {profileData?.userName || "User"}
                     </Typography>
                   </Box>
                 )}
               </Box>
-              <Box sx={{ display: "flex", alignItems: "center", ml: 2, gap: 1 }}>
+              <Box
+                sx={{ display: "flex", alignItems: "center", ml: 2, gap: 1 }}
+              >
                 <IconButton sx={buttonStyle}>
                   <Add />
                 </IconButton>
@@ -302,28 +330,30 @@ const TopBar = ({ user, profileData, onApplyFilters, onApplyDateRange, onResetDa
                   <Message />
                 </IconButton>
                 <IconButton sx={buttonStyle}>
-                  <Share />
-                </IconButton>
-                <IconButton sx={buttonStyle}>
-                  <MoreVert />
+                  <MoreHoriz />
                 </IconButton>
               </Box>
             </>
           ) : (
             <>
               <Box sx={{ display: "flex", alignItems: "center" }}>
-                <Avatar
-                  sx={{
-                    width: "51px",
-                    height: "51px",
-                    background: "linear-gradient(180deg, #FCEBDE 0%, #F7D3BA 100%)",
-                    border: "2px solid #FFFFFF",
-                  }}
-                  src={user?.avatar || "avatar"}
-                  alt={user?.userId || "User"}
-                />
+                <IconButton onClick={handleAvatarClick}>
+                  <Avatar
+                    sx={{
+                      width: "51px",
+                      height: "51px",
+                      background:
+                        "linear-gradient(180deg, #FCEBDE 0%, #F7D3BA 100%)",
+                      border: "2px solid #FFFFFF",
+                    }}
+                    src={user?.avatar || "avatar"}
+                    alt={user?.userId || "User"}
+                  />
+                </IconButton>
                 {!isMobile && !isTablet && (
-                  <Box sx={{ display: "flex", alignItems: "center", ml: "15px" }}>
+                  <Box
+                    sx={{ display: "flex", alignItems: "center", ml: "15px" }}
+                  >
                     <Typography
                       sx={{
                         fontSize: isMobile ? "18px" : "22px",
@@ -332,19 +362,22 @@ const TopBar = ({ user, profileData, onApplyFilters, onApplyDateRange, onResetDa
                         fontWeight: 600,
                       }}
                     >
-                      {getTitle()} {/* Render the appropriate title */}
+                      {getTitle()}
                     </Typography>
                   </Box>
                 )}
               </Box>
-              <Box sx={{ display: "flex", alignItems: "center", ml: 2, gap: 1 }}>
+              <Box
+                sx={{ display: "flex", alignItems: "center", ml: 2, gap: 1 }}
+              >
                 <IconButton sx={buttonStyle} onClick={handleNotificationClick}>
                   <Notifications />
                 </IconButton>
                 <IconButton onClick={handleSearchClick} sx={buttonStyle}>
                   <Search />
                 </IconButton>
-                {location.pathname === "/analytics" || location.pathname === "/messages" ? (
+                {location.pathname === "/analytics" ||
+                location.pathname === "/messages" ? (
                   <IconButton onClick={handleFilterClick} sx={buttonStyle}>
                     <FilterList />
                   </IconButton>
@@ -356,7 +389,9 @@ const TopBar = ({ user, profileData, onApplyFilters, onApplyDateRange, onResetDa
               </Box>
             </>
           )}
-          <Box sx={{ display: "flex", alignItems: "center", marginLeft: "auto" }}>
+          <Box
+            sx={{ display: "flex", alignItems: "center", marginLeft: "auto" }}
+          >
             {(isMobile || isTablet) && (
               <IconButton onClick={handleMenuToggle} sx={buttonStyle}>
                 <Menu />
@@ -380,7 +415,8 @@ const TopBar = ({ user, profileData, onApplyFilters, onApplyDateRange, onResetDa
       </AppBar>
 
       <SearchOverlay open={searchOpen} onClose={handleSearchClose} />
-      {location.pathname === "/analytics" || location.pathname === "/messages" ? (
+      {location.pathname === "/analytics" ||
+      location.pathname === "/messages" ? (
         <DatePickerOverlay
           open={filterOpen}
           onClose={handleFilterClose}
@@ -397,7 +433,11 @@ const TopBar = ({ user, profileData, onApplyFilters, onApplyDateRange, onResetDa
         />
       )}
 
-      <CenteredMenuOverlay open={menuOpen} onClose={handleMenuToggle} menuItems={menuItems} />
+      <CenteredMenuOverlay
+        open={menuOpen}
+        onClose={handleMenuToggle}
+        menuItems={menuItems}
+      />
       {notificationOpen && (
         <NotificationOverlay
           notifications={notifications}

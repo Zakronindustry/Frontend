@@ -1,6 +1,17 @@
 import { ref, set, get, push, update, remove } from "firebase/database";
 import { realtimeDb } from "./firebase"; // Import the Realtime Database instance
 
+// Funtion to store user data in the real-time database
+const storeUserInDb = (user) => {
+  const userRef = ref(realtimeDb, `users/${user.uid}`);
+  set(userRef, {
+    userId: user.uid,
+    email: user.email,
+    displayName: user.displayName,
+    avatar: user.photoURL,
+  });
+};
+
 // Function to add a new notification for a user
 export const addNotification = async (userId, notificationData) => {
   try {
@@ -72,10 +83,11 @@ export const createPrivateTrade = async (userId, tradeData) => {
   }
 };
 
-// Function to update an existing trade
+// Function to update an existing trade (private trade)
 export const updateTrade = async (userId, tradeId, updatedData) => {
   try {
-    const tradeRef = ref(realtimeDb, `users/${userId}/trades/${tradeId}`);
+    console.log('Updating trade for userId:', userId);  // Debug userId
+    const tradeRef = ref(realtimeDb, `users/${userId}/privateTrades/${tradeId}`);
     await update(tradeRef, updatedData);
     console.log("Trade updated successfully");
   } catch (error) {
@@ -206,5 +218,30 @@ export const getUserPublicTrades = async (userId) => {
   } catch (error) {
     console.error("Error fetching user's public trades: ", error);
     return [];
+  }
+};
+
+// Function to update a user's profile (using Firestore)
+export const updateUserProfile = async (uid, data) => {
+  try {
+    const userRef = doc(db, 'users', uid);  // Firestore reference to the user document
+    await updateDoc(userRef, data);  // Updating the user document
+    console.log("User profile updated successfully");
+  } catch (error) {
+    console.error("Error updating user profile: ", error);
+  }
+};
+
+// Function to delete a user's account (using Firestore & Firebase Auth)
+export const deleteUserAccount = async (uid) => {
+  try {
+    const user = auth.currentUser;  // Get the currently authenticated user
+    if (user && user.uid === uid) {
+      await deleteDoc(doc(db, 'users', uid));  // Delete user document from Firestore
+      await user.delete();  // Delete user from Firebase Authentication
+      console.log("User account deleted successfully");
+    }
+  } catch (error) {
+    console.error("Error deleting user account: ", error);
   }
 };

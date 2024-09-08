@@ -50,7 +50,7 @@ const UserProfile = () => {
     >
       <TopBar profileData={{ avatar: userData.avatar, userName: userData.userId }} />
 
-      <Box sx={{ width: "100%", maxWidth: "1200px" }}>
+      <Box sx={{ width: "95%" }}>
         <Grid container spacing={3}>
           {publicTrades.length > 0 ? (
             publicTrades.map((trade, index) => (

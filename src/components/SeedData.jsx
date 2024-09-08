@@ -1,8 +1,9 @@
 // src/components/SeedData.jsx
-import React from "react";
-import { ref, set } from "../firebase"; // Adjust the path if needed
+import React, { useState } from "react";
+import { ref, set } from "firebase/database"; // Import set and ref from Firebase database
 import { v4 as uuidv4 } from "uuid";
-import { realtimeDb } from "../firebase"; // Import the realtimeDb instance
+import { realtimeDb, auth } from "../firebase"; // Import the realtimeDb and auth instances
+import { createUserWithEmailAndPassword } from "firebase/auth"; // Import for creating user
 
 const emotions = [
   { emoji: "😠", color: "#C1BCBC", emotion: "Angry" },
@@ -20,14 +21,14 @@ function getRandomEmotion() {
   return emotions[getRandomInt(emotions.length)];
 }
 
-function createDummyUser(userId) {
+function createDummyUser(userId, email, password) {
   const publicTradesCount = getRandomInt(10);
   const followersCount = getRandomInt(100);
 
   const userData = {
     userId,
     avatar: `https://randomuser.me/api/portraits/lego/${getRandomInt(10)}.jpg`,
-    profileAge: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
     publicTrades: publicTradesCount,
     followers: followersCount,
     notifications: [],
@@ -35,7 +36,7 @@ function createDummyUser(userId) {
     messages: [],
   };
 
-  return userData;
+  return { userData, email, password };
 }
 
 function createDummyTrade(userId, tradeId) {
@@ -60,38 +61,54 @@ function createDummyTrade(userId, tradeId) {
 }
 
 const SeedData = () => {
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+
   const seedDatabase = async () => {
-    const usersRef = ref(realtimeDb, "users/");
+    setLoading(true);
+    setMessage("");
 
-    for (let i = 0; i < 10; i++) {
+    try {
       const userId = uuidv4();
-      const user = createDummyUser(userId);
+      const email = `user${getRandomInt(1000)}@dummy.com`;
+      const password = "password123"; // Ensure this aligns with Firebase's password requirements
 
-      // Save user
-      await set(ref(realtimeDb, `users/${userId}`), user);
+      const { userData } = createDummyUser(userId, email, password);
+
+      // Create user in Firebase Authentication
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const firebaseUser = userCredential.user;
+
+      // Save user data in the Realtime Database
+      await set(ref(realtimeDb, `users/${firebaseUser.uid}`), userData);
 
       // Create trades for the user
-      for (let j = 0; j < user.publicTrades; j++) {
+      for (let j = 0; j < userData.publicTrades; j++) {
         const tradeId = uuidv4();
-        const trade = createDummyTrade(userId, tradeId);
+        const trade = createDummyTrade(firebaseUser.uid, tradeId);
 
         // Save trade under user's privateTrades
-        await set(ref(realtimeDb, `users/${userId}/privateTrades/${tradeId}`), trade);
+        await set(ref(realtimeDb, `users/${firebaseUser.uid}/privateTrades/${tradeId}`), trade);
 
         // Optionally: Save public trade separately
         if (trade.isPublic) {
           await set(ref(realtimeDb, `publicTrades/${tradeId}`), trade);
         }
       }
-    }
 
-    console.log("Dummy data seeded successfully!");
+      setLoading(false);
+      setMessage("Dummy data seeded successfully!");
+    } catch (error) {
+      setLoading(false);
+      setMessage(`Error seeding data: ${error.message}`);
+    }
   };
 
   return (
     <div>
       <h1>Seed Database</h1>
-      <button onClick={seedDatabase}>Seed Data</button>
+      {loading ? <p>Seeding data...</p> : <button onClick={seedDatabase}>Seed Data</button>}
+      {message && <p>{message}</p>}
     </div>
   );
 };

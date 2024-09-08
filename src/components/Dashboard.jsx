@@ -4,8 +4,13 @@ import TradeCard from "./TradeCard";
 import BottomBar from "./BottomBar";
 import TradeForm from "./TradeForm";
 import TradeCardOverlay from "./TradeCardOverlay";
-import { getUserTrades, getPublicTrades, deleteTrade, updateTrade } from "../firebaseRealtimeCrud"; // Import the Realtime CRUD functions
-import { isWithinInterval, parse } from "date-fns"; 
+import {
+  getUserTrades,
+  getPublicTrades,
+  deleteTrade,
+  updateTrade,
+} from "../firebaseRealtimeCrud"; // Import the Realtime CRUD functions
+import { isWithinInterval, parse } from "date-fns";
 
 const Dashboard = ({ filters, userId }) => {
   const [tradeCards, setTradeCards] = useState([]);
@@ -14,6 +19,10 @@ const Dashboard = ({ filters, userId }) => {
   const [selectedEmotion, setSelectedEmotion] = useState(null);
   const [editingTrade, setEditingTrade] = useState(null); // New state to track editing
 
+  useEffect(() => {
+    console.log('userId in Dashboard:', userId);  // Check if userId is available
+  }, [userId]);
+
   // Function to apply filters to trade cards
   const applyFilters = (filters) => {
     let filteredCards = tradeCards;
@@ -21,35 +30,39 @@ const Dashboard = ({ filters, userId }) => {
     if (filters && Object.keys(filters).length > 0) {
       if (filters.emotions?.length > 0) {
         filteredCards = filteredCards.filter((card) =>
-          filters.emotions.includes(card.emoji)
+          filters.emotions.includes(card.emoji),
         );
       }
 
       if (filters.symbols?.length > 0) {
         filteredCards = filteredCards.filter((card) =>
-          filters.symbols.includes(card.symbol)
+          filters.symbols.includes(card.symbol),
         );
       }
 
       if (filters.sessions?.length > 0) {
         filteredCards = filteredCards.filter((card) =>
-          filters.sessions.includes(card.session)
+          filters.sessions.includes(card.session),
         );
       }
 
       if (filters.strategies?.length > 0) {
         filteredCards = filteredCards.filter((card) =>
-          filters.strategies.includes(card.strategy)
+          filters.strategies.includes(card.strategy),
         );
       }
 
       if (filters.dateRange?.startDate && filters.dateRange?.endDate) {
         filteredCards = filteredCards.filter((card) => {
           try {
-            const tradeDate = parse(card.date, 'dd-MM-yyyy', new Date());
+            const tradeDate = parse(card.date, "dd-MM-yyyy", new Date());
             return isWithinInterval(tradeDate, {
-              start: parse(filters.dateRange.startDate, 'dd-MM-yyyy', new Date()),
-              end: parse(filters.dateRange.endDate, 'dd-MM-yyyy', new Date())
+              start: parse(
+                filters.dateRange.startDate,
+                "dd-MM-yyyy",
+                new Date(),
+              ),
+              end: parse(filters.dateRange.endDate, "dd-MM-yyyy", new Date()),
             });
           } catch (error) {
             console.error("Error parsing date for card:", card, error);
@@ -68,7 +81,10 @@ const Dashboard = ({ filters, userId }) => {
       try {
         const privateTrades = await getUserTrades(userId);
         const publicTrades = await getPublicTrades();
-        setTradeCards([...Object.values(privateTrades || {}), ...Object.values(publicTrades || {})]);
+        setTradeCards([
+          ...Object.values(privateTrades || {}),
+          ...Object.values(publicTrades || {}),
+        ]);
       } catch (error) {
         console.error("Error fetching trades:", error);
       }
@@ -86,7 +102,7 @@ const Dashboard = ({ filters, userId }) => {
   // Handling emotion selection and form save actions
   const handleEmotionSelect = (emotion) => {
     setSelectedEmotion(emotion);
-    setEditingTrade(null); // Reset editing state
+    setEditingTrade(null); // Reset editing state when creating a new trade
     setIsFormOpen(true);
   };
 
@@ -100,21 +116,26 @@ const Dashboard = ({ filters, userId }) => {
     if (editingTrade) {
       // Update existing trade
       const updatedTrades = tradeCards.map((trade) =>
-        trade.id === editingTrade.id ? { ...editingTrade, ...tradeData } : trade
+        trade.id === editingTrade.id
+          ? { ...editingTrade, ...tradeData }
+          : trade,
       );
       setTradeCards(updatedTrades);
-      updateTrade(userId, editingTrade.id, tradeData); // Update in the database
+      updateTrade(userId, editingTrade.id, tradeData); // Update in Firebase
     } else {
-      // Create a new trade
+      // Create a new trade and assign a unique ID
+      const newTradeId = push(ref(realtimeDb, `users/${userId}/privateTrades`)).key; // Generate unique ID
       const newTradeCard = {
         ...tradeData,
+        id: newTradeId, // Ensure new trade has a unique ID
         emotion: selectedEmotion,
         color: getColorForEmotion(selectedEmotion),
         emoji: getEmojiForEmotion(selectedEmotion),
       };
-      setTradeCards([newTradeCard, ...tradeCards]);
+      setTradeCards([newTradeCard, ...tradeCards]); // Add new trade to state
+      createPrivateTrade(userId, { ...newTradeCard }); // Save to Firebase
     }
-    handleFormClose();
+    handleFormClose(); // Close form after saving
   };
 
   const handleEditTrade = (trade) => {

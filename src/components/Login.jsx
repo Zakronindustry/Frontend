@@ -1,47 +1,72 @@
-import React, { useState } from 'react';
-import { Box, TextField, Button, Typography, Link } from '@mui/material';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../firebase';
-import { useNavigate } from 'react-router-dom';
+import React from "react";
+import { Box, Typography, Button } from "@mui/material";
+import { signInWithPopup } from "firebase/auth";
+import { auth, provider } from "../firebase";
+import GoogleIcon from '@mui/icons-material/Google'; // Material UI Google Icon
+import CarouselImage from "./Login.svg"; // Import the actual path to your carousel SVG image
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const navigate = useNavigate();
-
-  const handleLogin = async () => {
+  const handleGoogleLogin = async () => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      navigate('/'); // Redirect to dashboard after successful login
+      const result = await signInWithPopup(auth, provider);
+      console.log("User logged in:", result.user);
     } catch (error) {
-      setError(error.message);
+      console.error("Error logging in with Google:", error);
     }
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 5 }}>
-      <Typography variant="h4" gutterBottom>Login</Typography>
-      {error && <Typography color="error">{error}</Typography>}
-      <TextField
-        label="Email"
-        variant="outlined"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        sx={{ mb: 2, width: '300px' }}
+    <Box
+      sx={{
+        backgroundColor: '#FCF6F1',
+        minHeight: '100vh',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexDirection: 'column',
+        padding: '20px',
+        textAlign: 'center',
+      }}
+    >
+      {/* Trade Card Carousel SVG */}
+      <Box
+        component="img"
+        src={CarouselImage}
+        alt="Trade card carousel"
+        sx={{
+          maxWidth: '100%',
+          height: 'auto',
+          marginBottom: '0px', // You can adjust the margin as needed
+        }}
       />
-      <TextField
-        label="Password"
-        variant="outlined"
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        sx={{ mb: 2, width: '300px' }}
-      />
-      <Button variant="contained" onClick={handleLogin} sx={{ width: '300px', mb: 2 }}>Login</Button>
-      <Link href="/signup" variant="body2">
-        Don't have an account? Sign up
-      </Link>
+
+      {/* Welcome Text */}
+      <Box>
+        <Typography variant="h3" sx={{ fontWeight: 'bold', marginBottom: '10px', fontFamily: 'Montserat' }}>
+          Welcome to Pal 👋
+        </Typography>
+        <Typography variant="body1" sx={{ color: 'gray', marginBottom: '20px', fontFamily: 'Montserat' }}>
+          Manage your trading emotions and notes in a single place, connect with the community, and improve.
+        </Typography>
+      </Box>
+
+      {/* Google Sign-In Button */}
+      <Button
+        variant="contained"
+        startIcon={<GoogleIcon />}
+        onClick={handleGoogleLogin}
+        sx={{
+          backgroundColor: '#000000',
+          color: 'white',
+          borderRadius: '50px',
+          padding: '12px 24px',
+          '&:hover': {
+            backgroundColor: '#333333',
+          },
+        }}
+      >
+        Sign in with Google
+      </Button>
     </Box>
   );
 };
