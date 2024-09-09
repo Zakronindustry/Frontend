@@ -8,10 +8,10 @@ import { storage } from "../firebase";  // Make sure storage is imported
 
 const StyledSwitch = styled(Switch)(({ theme }) => ({
   '& .MuiSwitch-track': {
-    backgroundColor: theme.palette.grey[300],
+    backgroundColor: '#e0e0e0', // Fallback to '#e0e0e0'
   },
   '& .MuiSwitch-thumb': {
-    backgroundColor: theme.palette.common.white,
+    backgroundColor: theme?.palette?.common?.white || '#ffffff', // Fallback to '#ffffff'
   },
 }));
 

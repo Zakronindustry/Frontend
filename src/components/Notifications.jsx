@@ -17,10 +17,10 @@ import { updateUserProfile } from "../firebaseRealtimeCrud"; // Assume this func
 
 const StyledSwitch = styled(Switch)(({ theme }) => ({
   '& .MuiSwitch-track': {
-    backgroundColor: theme.palette.grey[300],
+    backgroundColor: '#e0e0e0',
   },
   '& .MuiSwitch-thumb': {
-    backgroundColor: theme.palette.common.white,
+    backgroundColor: '#fff',
   },
 }));
 

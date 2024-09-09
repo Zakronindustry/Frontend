@@ -8,11 +8,11 @@ import {
   Grid,
 } from '@mui/material';
 import { styled } from '@mui/system';
-import { Bell, ChevronRight, BookOpen, HelpCircle, Globe, FileText, ShieldCheck, User } from 'lucide-react';
+import { Bell, ChevronRight, BookOpen, HelpCircle, FileText, ShieldCheck, User } from 'lucide-react';
 import TopBar from './TopBar';
 import ProfileComponent from './ProfileComponent';
-import Notifications from './Notifications'; // Import the Notifications component
-import BookmarkComponent from './BookmarkComponent'; // Adjust the path according to your project structure
+import Notifications from './Notifications';
+import BookmarkComponent from './BookmarkComponent'; // Adjust path according to your project structure
 
 // Styled components with fallback values
 const StyledBox = styled(Box)({
@@ -23,12 +23,12 @@ const StyledBox = styled(Box)({
   overflowY: 'auto',
 });
 
-const ProfileSettingsPage = ({ user }) => {
+const ProfileSettingsPage = ({ user }) => {  // Accept the `user` prop here
   const [selectedSetting, setSelectedSetting] = useState("Profile");
 
   const profileData = {
-    name: "Retro_D@niel!",
-    joinDate: "Apr 19, 2023",
+    name: user?.userId || "Retro_D@niel!",  // Use user data if available
+    joinDate: user?.createdAt || "Apr 19, 2023",
     publicTrades: 26,
     followers: 197,
   };
@@ -45,7 +45,7 @@ const ProfileSettingsPage = ({ user }) => {
   const renderComponent = (component) => {
     switch (component) {
       case "Profile":
-        return <ProfileComponent user={user} />; // Pass user object
+        return <ProfileComponent user={user} />; // Pass the `user` prop to the profile component
       case "Bookmark":
         return <BookmarkComponent />;
       case "Notifications":
@@ -55,13 +55,13 @@ const ProfileSettingsPage = ({ user }) => {
       case "Privacy Policy":
         return <PrivacyPolicyComponent />;
       default:
-        return <ProfileComponent user={user} />; // Pass user object by default
+        return <ProfileComponent user={user} />; // Pass the `user` prop by default
     }
   };
 
   return (
     <Box sx={{ bgcolor: '#FCF6F1', minHeight: '100vh' }}>
-      <TopBar />
+      <TopBar user={user} /> {/* Pass the `user` to the TopBar */}
       <Box sx={{ width: '90%', mx: 'auto', pt: '127px' }}>
         <Grid container spacing={3}>
           {/* Left Column */}
@@ -81,10 +81,10 @@ const ProfileSettingsPage = ({ user }) => {
                   mt={1}
                   overflow="hidden" // Ensure the image fits within the circular box
                 >
-                  {user?.avatarUrl ? (
+                  {user?.avatar ? (
                     <img
-                      src={user.avatarUrl} // Use the user's avatar URL from the database
-                      alt={`${user.displayName}'s avatar`} // Accessible alt text
+                      src={user.avatar} // Use the user's avatar URL from the database
+                      alt={`${user.userId}'s avatar`} // Accessible alt text
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }} // Make the image cover the box area
                     />
                   ) : (
