@@ -38,7 +38,7 @@ const AppWrapper = () => {
     const storeUserInDb = (user) => {
       const userRef = ref(realtimeDb, `users/${user.uid}`); // Path: users/<userId>
       set(userRef, {
-        userId: user.displayName,  // Use Google displayName as userId in your platform
+        userId: user.displayName,  // Use Google displayName as userId in our platform
         email: user.email,
         avatar: user.photoURL,
       }).then(() => {
@@ -104,7 +104,7 @@ const AppWrapper = () => {
         <Routes>
           {/* Protected routes */}
           <Route
-            path="/"
+            path="/notes"
             element={<Dashboard filters={filters} userId={user?.userId} />}
           />
           <Route
@@ -114,11 +114,11 @@ const AppWrapper = () => {
           <Route path="/user/:userId" element={<UserProfile />} />
           <Route
             path="/analytics"
-            element={<Analytics dateRange={dateRange} />}
+            element={<Analytics dateRange={dateRange} userId={user?.userId} />}
           />
           <Route
             path="/messages"
-            element={<Messages dateRange={dateRange} />}
+            element={<Messages dateRange={dateRange} userId={user?.userId} />}
           />
           <Route
             path="/profile-settings"
@@ -127,7 +127,7 @@ const AppWrapper = () => {
 
           {/* Public routes */}
           <Route path="/signup" element={<SignUp />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/" element={<Login />} />
         </Routes>
       </Suspense>
     </>
