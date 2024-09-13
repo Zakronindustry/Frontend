@@ -30,7 +30,7 @@ const Login = () => {
       storeUserInDb(result.user);
 
       // Redirect to the Dashboard after successful login
-      navigate("/"); // Assuming "/" is the Dashboard route
+      navigate("/notes"); // Assuming "/" is the Dashboard route
     } catch (error) {
       console.error("Error logging in with Google:", error);
     }
