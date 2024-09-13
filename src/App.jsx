@@ -86,7 +86,7 @@ const AppWrapper = () => {
   };
 
   // Conditionally render TopBar based on the current route
-  const showTopBar = location.pathname !== "/login";
+  const showTopBar = location.pathname !== "/";
 
   return (
     <>
