@@ -114,11 +114,11 @@ const AppWrapper = () => {
           <Route path="/user/:userId" element={<UserProfile />} />
           <Route
             path="/analytics"
-            element={<Analytics dateRange={dateRange} userId={user?.userId} />}
+            element={<Analytics dateRange={dateRange} />}
           />
           <Route
             path="/messages"
-            element={<Messages dateRange={dateRange} userId={user?.userId} />}
+            element={<Messages dateRange={dateRange} />}
           />
           <Route
             path="/profile-settings"
