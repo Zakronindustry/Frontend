@@ -39,7 +39,7 @@ const PublicTradeCardOverlay = ({ card, onClose, userId }) => {
 
   // Handle sharing the trade
   const handleShare = () => {
-    const cardLink = `${window.location.origin}/publicTrades/${card.id}`;
+    const cardLink = `${window.location.origin}/publicTrades/${id}`;
     navigator.clipboard.writeText(cardLink);
     alert('Link copied to clipboard');
     handleMenuClose();
@@ -56,7 +56,7 @@ const PublicTradeCardOverlay = ({ card, onClose, userId }) => {
       if (isBookmarked) {
         alert('This trade is already bookmarked.');
       } else {
-        const newBookmark = { id: card.id, title: card.title, emoji: card.emoji, description: card.description, color: card.color, tags: card.tags };
+        const newBookmark = { id: card.id, emotion: card.emotion, reason: card.title, emoji: card.emoji, description: card.description, color: card.color, tags: card.tags };
         const updatedBookmarks = [...bookmarks, newBookmark];
 
         // Update Firebase
