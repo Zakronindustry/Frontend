@@ -5,14 +5,12 @@ import BottomBar from "./BottomBar";
 import TradeForm from "./TradeForm";
 import TradeCardOverlay from "./TradeCardOverlay";
 import {
-  getUserTrades,
-  getPublicTrades,
+  listenToUserTrades,
   deleteTrade,
   updateTrade,
   createPrivateTrade,
-} from "../firebaseRealtimeCrud"; // Import the Realtime CRUD functions
-import { isWithinInterval, parse } from "date-fns";
-import { ref, push } from "firebase/database"; // Firebase functions
+} from "../firebaseRealtimeCrud"; // Use a listener function like the community page
+import { push, ref } from "firebase/database"; // Firebase functions
 import { realtimeDb } from "../firebase"; // Firebase database
 
 const Dashboard = ({ filters, userId }) => {
@@ -20,55 +18,47 @@ const Dashboard = ({ filters, userId }) => {
   const [selectedTrade, setSelectedTrade] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedEmotion, setSelectedEmotion] = useState(null);
-  const [editingTrade, setEditingTrade] = useState(null); // New state to track editing
-  const [loading, setLoading] = useState(true); // New state to track loading
+  const [editingTrade, setEditingTrade] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log('userId in Dashboard:', userId); // Debugging to ensure userId is passed correctly
-  }, [userId]);
+    if (!userId) return;
 
-  useEffect(() => {
-    if (!userId) {
-      return; // Don't run if userId is undefined
-    }
-    // Fetch trades data
-    const fetchTrades = async () => {
-      try {
-        const privateTrades = await getUserTrades(userId);
-        const publicTrades = await getPublicTrades();
-        setTradeCards([
-          ...Object.values(privateTrades || {}),
-          ...Object.values(publicTrades || {}),
-        ]);
-      } catch (error) {
-        console.error("Error fetching trades:", error);
-      }
-      setLoading(false); // Stop loading after fetching trades
+    const handleUserTrades = (trades) => {
+      const privateTrades = Object.values(trades || {});
+      setTradeCards(privateTrades); // Set the user's private trades
+      setLoading(false); // Set loading to false after data is fetched
     };
 
-    fetchTrades();
+    // Set up the real-time listener for private trades
+    const unsubscribe = listenToUserTrades(userId, handleUserTrades);
+
+    // Cleanup listener when the component unmounts
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, [userId]);
 
   useEffect(() => {
     if (filters) {
       applyFilters(filters);
     }
-  }, [filters]);
+  }, [filters, tradeCards]);
 
   // Function to apply filters to trade cards
   const applyFilters = (filters) => {
     let filteredCards = tradeCards;
 
     if (filters && Object.keys(filters).length > 0) {
-      if (filters.emotions?.length > 0) {
+      if (filters.emotion?.length > 0) {
         filteredCards = filteredCards.filter((card) =>
-          filters.emotions.includes(card.emoji),
+          filters.emotion.includes(card.emoji),
         );
       }
 
-      if (filters.symbols?.length > 0) {
+      if (filters.instrument?.length > 0) {
         filteredCards = filteredCards.filter((card) =>
-          filters.symbols.includes(card.symbol),
+          filters.instrument.includes(card.instrument),
         );
       }
 
@@ -87,14 +77,10 @@ const Dashboard = ({ filters, userId }) => {
       if (filters.dateRange?.startDate && filters.dateRange?.endDate) {
         filteredCards = filteredCards.filter((card) => {
           try {
-            const tradeDate = parse(card.date, "dd-MM-yyyy", new Date());
+            const tradeDate = parse(card.date, 'dd-MM-yyyy', new Date());
             return isWithinInterval(tradeDate, {
-              start: parse(
-                filters.dateRange.startDate,
-                "dd-MM-yyyy",
-                new Date(),
-              ),
-              end: parse(filters.dateRange.endDate, "dd-MM-yyyy", new Date()),
+              start: parse(filters.dateRange.startDate, 'dd-MM-yyyy', new Date()),
+              end: parse(filters.dateRange.endDate, 'dd-MM-yyyy', new Date())
             });
           } catch (error) {
             console.error("Error parsing date for card:", card, error);
@@ -107,7 +93,28 @@ const Dashboard = ({ filters, userId }) => {
     setTradeCards(filteredCards);
   };
 
-  // Handling emotion selection and form save actions
+  // Function to map emotions to colors
+  const getColorForEmotion = (emotion) => {
+    switch (emotion.toLowerCase()) {
+      case 'anxious': return '#F5BCBB';
+      case 'calm': return '#D0E9BC';
+      case 'confident': return '#B0DCF0';
+      case 'greedy': return '#F5E0B2';
+      case 'frustrated': return '#C1BCBC';
+    }
+  };
+
+  // Function to map emotions to emojis
+  const getEmojiForEmotion = (emotion) => {
+    switch (emotion.toLowerCase()) {
+      case 'anxious': return '🤯';
+      case 'calm': return '😊';
+      case 'confident': return '😎';
+      case 'greedy': return '🤑';
+      case 'frustrated': return '😠';
+    }
+  };
+
   const handleEmotionSelect = (emotion) => {
     setSelectedEmotion(emotion);
     setEditingTrade(null); // Reset editing state when creating a new trade
@@ -121,41 +128,45 @@ const Dashboard = ({ filters, userId }) => {
   };
 
   const handleFormSave = (tradeData) => {
+    const color = getColorForEmotion(selectedEmotion);
+    const emoji = getEmojiForEmotion(selectedEmotion);
+
     if (editingTrade) {
-      // Update existing trade
       const updatedTrades = tradeCards.map((trade) =>
         trade.id === editingTrade.id
-          ? { ...editingTrade, ...tradeData }
+          ? { ...editingTrade, ...tradeData, color, emoji }
           : trade,
       );
       setTradeCards(updatedTrades);
-      updateTrade(userId, editingTrade.id, tradeData); // Update in Firebase
+
+      // Update the trade in Firebase
+      updateTrade(userId, editingTrade.id, { ...tradeData, color, emoji }, editingTrade.isPublic);
     } else {
-      // Create a new trade and assign a unique ID
-      const newTradeId = push(ref(realtimeDb, `users/${userId}/privateTrades`)).key; // Generate unique ID
+      // Create a new private trade by default
+      const newTradeId = push(ref(realtimeDb, `users/${userId}/privateTrades`)).key;
       const newTradeCard = {
         ...tradeData,
-        id: newTradeId, // Ensure new trade has a unique ID
+        id: newTradeId,
         emotion: selectedEmotion,
-        color: getColorForEmotion(selectedEmotion),
-        emoji: getEmojiForEmotion(selectedEmotion),
+        color,
+        emoji,
       };
-      setTradeCards([newTradeCard, ...tradeCards]); // Add new trade to state
-      createPrivateTrade(userId, { ...newTradeCard }); // Save to Firebase
+      setTradeCards([newTradeCard, ...tradeCards]);
+      createPrivateTrade(userId, { ...newTradeCard });
     }
-    handleFormClose(); // Close form after saving
+    handleFormClose();
   };
 
   const handleEditTrade = (trade) => {
-    setSelectedEmotion(trade.emotion); // Set emotion to pre-fill form color/emoji
-    setEditingTrade(trade); // Set the trade to be edited
+    setSelectedEmotion(trade.emotion);
+    setEditingTrade(trade);
     setIsFormOpen(true);
   };
 
   const handleDeleteTrade = (tradeId) => {
     const updatedTrades = tradeCards.filter((trade) => trade.id !== tradeId);
     setTradeCards(updatedTrades);
-    deleteTrade(userId, tradeId); // Delete from the database
+    deleteTrade(userId, tradeId);
   };
 
   const handleTradeCardClick = (trade) => {
@@ -192,9 +203,9 @@ const Dashboard = ({ filters, userId }) => {
             <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
               <TradeCard
                 {...card}
-                onClick={() => handleTradeCardClick(card)} // Handle card click
-                onEdit={() => handleEditTrade(card)} // Handle edit
-                onDelete={() => handleDeleteTrade(card.id)} // Handle delete
+                onClick={() => handleTradeCardClick(card)}
+                onEdit={() => handleEditTrade(card)}
+                onDelete={() => handleDeleteTrade(card.id)}
               />
             </Grid>
           ))}
@@ -205,12 +216,12 @@ const Dashboard = ({ filters, userId }) => {
             emotion={selectedEmotion}
             onClose={handleFormClose}
             onSave={handleFormSave}
-            existingTrade={editingTrade} // Pass existing trade data if editing
-            userId={userId} // Pass userId for trade association
+            existingTrade={editingTrade}
+            userId={userId}
           />
         )}
         {selectedTrade && (
-          <TradeCardOverlay // Use TradeCardOverlay here
+          <TradeCardOverlay
             card={selectedTrade}
             onClose={handleOverlayClose}
           />

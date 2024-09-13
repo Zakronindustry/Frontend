@@ -129,15 +129,15 @@ const PublicTradeCardOverlay = ({ card, onClose, userId }) => {
           </Typography>
 
           <Typography variant="h5" sx={{ mb: 2 }}>
-            {card.title}
+            {card.reason}
           </Typography>
 
           <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-            <Chip label={card.symbol} size="small" sx={{ backgroundColor: 'rgba(255,255,255,0.7)', fontWeight: 'bold', fontSize: '0.75rem' }} />
-            <Chip label={card.change} size="small" sx={{ backgroundColor: 'rgba(255,255,255,0.7)', fontWeight: 'bold', fontSize: '0.75rem' }} />
-            <Chip label={card.price1} size="small" sx={{ backgroundColor: 'rgba(255,255,255,0.7)', fontSize: '0.75rem' }} />
-            <Chip label={card.price2} size="small" sx={{ backgroundColor: 'rgba(255,255,255,0.7)', fontSize: '0.75rem' }} />
-            <Chip label={card.quantity} size="small" sx={{ backgroundColor: 'rgba(255,255,255,0.7)', fontSize: '0.75rem' }} />
+            <Chip label={card.instrument} size="small" sx={{ backgroundColor: 'rgba(255,255,255,0.7)', fontWeight: 'bold', fontSize: '0.75rem' }} />
+            <Chip label={card.profitLoss} size="small" sx={{ backgroundColor: 'rgba(255,255,255,0.7)', fontWeight: 'bold', fontSize: '0.75rem' }} />
+            <Chip label={card.entryPoint} size="small" sx={{ backgroundColor: 'rgba(255,255,255,0.7)', fontSize: '0.75rem' }} />
+            <Chip label={card.exitPoint} size="small" sx={{ backgroundColor: 'rgba(255,255,255,0.7)', fontSize: '0.75rem' }} />
+            <Chip label={card.positionSize} size="small" sx={{ backgroundColor: 'rgba(255,255,255,0.7)', fontSize: '0.75rem' }} />
           </Box>
 
           <Typography variant="body1" sx={{ mb: 2, flexGrow: 1 }}>

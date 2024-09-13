@@ -1,31 +1,44 @@
-import React, { useState } from 'react';
-import { Card, CardContent, Typography, Box, Chip, IconButton, Menu, MenuItem } from '@mui/material';
-import ThumbUpIcon from '@mui/icons-material/ThumbUp'; 
-import ThumbDownIcon from '@mui/icons-material/ThumbDown';
-import MailIcon from '@mui/icons-material/Mail';
-import MoreHorizOutlinedIcon from '@mui/icons-material/MoreHorizOutlined';
+import React, { useState } from "react";
+import {
+  Card,
+  CardContent,
+  Typography,
+  Box,
+  Chip,
+  IconButton,
+  Menu,
+  MenuItem,
+} from "@mui/material";
+import ThumbUpIcon from "@mui/icons-material/ThumbUp";
+import ThumbDownIcon from "@mui/icons-material/ThumbDown";
+import MailIcon from "@mui/icons-material/Mail";
+import MoreHorizOutlinedIcon from "@mui/icons-material/MoreHorizOutlined";
 import { ref, update } from "firebase/database"; // Import from Realtime Database
 import { realtimeDb } from "../firebase"; // Import your Realtime Database instance
-import { getUserProfile, updateUserProfile, flagTrade } from '../firebaseRealtimeCrud'; // Import your Firebase CRUD
-import PublicTradeCardOverlay from './PublicTradeCardOverlay';  // Adjust the path if necessary
+import {
+  getUserProfile,
+  updateUserProfile,
+  flagTrade,
+} from "../firebaseRealtimeCrud"; // Import your Firebase CRUD
+import PublicTradeCardOverlay from "./PublicTradeCardOverlay"; // Adjust the path if necessary
 
-const PublicTradeCard = ({ 
-  id, 
-  color, 
-  title, 
-  symbol, 
-  change, 
-  price1, 
-  price2, 
-  quantity, 
-  description = '', 
-  time, 
-  tags = [], 
-  emoji, 
-  likes: initialLikes, 
+const PublicTradeCard = ({
+  id,
+  color,
+  title,
+  symbol,
+  profitLoss,
+  entryPoint,
+  exitPoint,
+  positionSize,
+  description = "",
+  time,
+  tags = [],
+  emoji,
+  likes: initialLikes,
   comments,
   commentsList = [],
-  userId 
+  userId,
 }) => {
   const [likes, setLikes] = useState(initialLikes);
   const [liked, setLiked] = useState(false);
@@ -38,9 +51,7 @@ const PublicTradeCard = ({
       : description || "";
 
   const truncatedTitle =
-    title && title.length > 35
-      ? `${title.substring(0, 35)}...`
-      : title || "";
+    title && title.length > 35 ? `${title.substring(0, 35)}...` : title || "";
 
   // Handle opening and closing of the three-dot menu
   const handleMenuOpen = (event) => {
@@ -66,6 +77,7 @@ const PublicTradeCard = ({
     setLikes(newLikes);
 
     try {
+      console.log(id, color, title, symbol, emoji);
       const tradeRef = ref(realtimeDb, `publicTrades/${id}`);
       await update(tradeRef, { likes: newLikes });
     } catch (error) {
@@ -116,10 +128,10 @@ const PublicTradeCard = ({
     try {
       // Retrieve the user profile
       const userProfile = await getUserProfile(userId); // Assume userId is passed as a prop
-      const bookmarks = userProfile.bookmarks || [];  // Existing bookmarks or an empty array
+      const bookmarks = userProfile.bookmarks || []; // Existing bookmarks or an empty array
 
       // Check if this trade is already bookmarked
-      const isBookmarked = bookmarks.some(bookmark => bookmark.id === id);
+      const isBookmarked = bookmarks.some((bookmark) => bookmark.id === id);
       if (isBookmarked) {
         alert("This trade is already bookmarked.");
         handleMenuClose();
@@ -151,41 +163,55 @@ const PublicTradeCard = ({
 
   return (
     <>
-      <Card 
-        sx={{ 
-          backgroundColor: color, 
-          borderRadius: '20px', 
-          boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.1)',
-          height: '100%',
-          display: 'flex',
-          padding: '12px',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          alignItems: 'start',
+      <Card
+        sx={{
+          backgroundColor: color,
+          borderRadius: "20px",
+          boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
+          height: "100%",
+          display: "flex",
+          padding: "12px",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          alignItems: "start",
         }}
       >
-        <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', position: 'relative', pt: 1 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-            <Typography 
-              sx={{ 
-                fontSize: '3rem', 
+        <CardContent
+          sx={{
+            flexGrow: 1,
+            display: "flex",
+            flexDirection: "column",
+            position: "relative",
+            pt: 1,
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              width: "100%",
+            }}
+          >
+            <Typography
+              sx={{
+                fontSize: "3rem",
                 lineHeight: 1,
                 mb: 1,
-                filter: 'drop-shadow(0px 4px 4px rgba(0,0,0,0.1))'
+                filter: "drop-shadow(0px 4px 4px rgba(0,0,0,0.1))",
               }}
             >
               {emoji}
             </Typography>
 
             {/* Three-dot menu */}
-            <IconButton 
-              size="small" 
-              sx={{ 
-                position: 'absolute', 
-                top: 15, 
-                right: 15, 
-                backgroundColor: 'rgba(255, 255, 255, 0.7)', 
-                borderRadius: '50%',
+            <IconButton
+              size="small"
+              sx={{
+                position: "absolute",
+                top: 15,
+                right: 15,
+                backgroundColor: "rgba(255, 255, 255, 0.7)",
+                borderRadius: "50%",
                 zIndex: 10,
               }}
               onClick={handleMenuOpen}
@@ -211,111 +237,176 @@ const PublicTradeCard = ({
             </Menu>
           </Box>
 
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1, mt: 1 }}>
-            <Typography variant="h6" sx={{ fontWeight: 'semibold', fontSize: '1.2rem', maxWidth: '100%' }}>{truncatedTitle}</Typography>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              mb: 1,
+              mt: 1,
+            }}
+          >
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: "semibold",
+                fontSize: "1.2rem",
+                maxWidth: "100%",
+              }}
+            >
+              {truncatedTitle}
+            </Typography>
           </Box>
 
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 1 }}>
-            <Chip 
-              label={symbol} 
-              size="small" 
-              sx={{ 
-                backgroundColor: 'rgba(255,255,255,0.7)', 
-                fontWeight: 'bold',
-                fontSize: '0.75rem',
-              }} 
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 1 }}>
+            <Chip
+              label={symbol}
+              size="small"
+              sx={{
+                backgroundColor: "rgba(255,255,255,0.7)",
+                fontWeight: "bold",
+                fontSize: "0.75rem",
+              }}
             />
-            <Chip 
-              label={change} 
-              size="small" 
-              sx={{ 
-                backgroundColor: 'rgba(255,255,255,0.7)', 
-                fontWeight: 'bold',
-                fontSize: '0.75rem',
-              }} 
+            <Chip
+              label={profitLoss}
+              size="small"
+              sx={{
+                backgroundColor: "rgba(255,255,255,0.7)",
+                fontWeight: "bold",
+                fontSize: "0.75rem",
+              }}
             />
           </Box>
 
-          <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
-            <Chip label={price1} size="small" sx={{ backgroundColor: 'rgba(255,255,255,0.7)', fontSize: '0.75rem' }} />
-            <Chip label={price2} size="small" sx={{ backgroundColor: 'rgba(255,255,255,0.7)', fontSize: '0.75rem' }} />
-            <Chip label={quantity} size="small" sx={{ backgroundColor: 'rgba(255,255,255,0.7)', fontSize: '0.75rem' }} />
+          <Box sx={{ display: "flex", gap: 1, mb: 1 }}>
+            <Chip
+              label={entryPoint}
+              size="small"
+              sx={{
+                backgroundColor: "rgba(255,255,255,0.7)",
+                fontSize: "0.75rem",
+              }}
+            />
+            <Chip
+              label={exitPoint}
+              size="small"
+              sx={{
+                backgroundColor: "rgba(255,255,255,0.7)",
+                fontSize: "0.75rem",
+              }}
+            />
+            <Chip
+              label={positionSize}
+              size="small"
+              sx={{
+                backgroundColor: "rgba(255,255,255,0.7)",
+                fontSize: "0.75rem",
+              }}
+            />
           </Box>
 
-          <Typography variant="body2" sx={{ mb: 2, fontSize: '0.9rem', fontStyle: 'italic', flexGrow: 1 }}>
+          <Typography
+            variant="body2"
+            sx={{ mb: 2, fontSize: "0.9rem", fontStyle: "italic", flexGrow: 1 }}
+          >
             {truncatedDescription}
           </Typography>
 
-          <Box sx={{ mt: 'auto' }}>
-            <Typography variant="caption" sx={{ display: 'block', mb: 1, color: 'text.secondary' }}>{time}</Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+          <Box sx={{ mt: "auto" }}>
+            <Typography
+              variant="caption"
+              sx={{ display: "block", mb: 1, color: "text.secondary" }}
+            >
+              {time}
+            </Typography>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
               {tags.map((tag, index) => (
-                <Chip 
-                  key={index} 
-                  label={tag} 
-                  size="small" 
-                  sx={{ 
-                    backgroundColor: 'rgba(255,255,255,0.7)', 
-                    fontSize: '0.7rem',
-                    height: '20px',
-                  }} 
+                <Chip
+                  key={index}
+                  label={tag}
+                  size="small"
+                  sx={{
+                    backgroundColor: "rgba(255,255,255,0.7)",
+                    fontSize: "0.7rem",
+                    height: "20px",
+                  }}
                 />
               ))}
             </Box>
           </Box>
         </CardContent>
 
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            padding: '5px 15px', 
-            backgroundColor: 'transparent',
-            borderRadius: '25px', 
-            width: '100%',
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            padding: "5px 15px",
+            backgroundColor: "transparent",
+            borderRadius: "25px",
+            width: "100%",
             mb: 1,
           }}
         >
-          <Box 
-            sx={{ 
-              display: 'flex', 
-              alignItems: 'center',
-              backgroundColor: 'transparent',
-              borderRadius: '50px',
-              padding: '1px 3px',
-              border: '1px solid rgba(255,255,255,0.5)', 
-              flex: 'none',  
-              justifyContent: 'space-between',
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              backgroundColor: "transparent",
+              borderRadius: "50px",
+              padding: "1px 3px",
+              border: "1px solid rgba(255,255,255,0.5)",
+              flex: "none",
+              justifyContent: "space-between",
             }}
           >
-            <IconButton sx={{ color: liked ? 'yellow' : 'rgba(255,255,255,0.8)' }} onClick={handleLike}>
+            <IconButton
+              sx={{ color: liked ? "yellow" : "rgba(255,255,255,0.8)" }}
+              onClick={handleLike}
+            >
               <ThumbUpIcon fontSize="small" />
             </IconButton>
-            <Typography variant="caption" sx={{ ml: 1, color: 'rgba(255,255,255,0.8)' }}>
+            <Typography
+              variant="caption"
+              sx={{ ml: 1, color: "rgba(255,255,255,0.8)" }}
+            >
               {likes}
             </Typography>
-            <Box sx={{ mx: 1, height: '80%', width: '1px', backgroundColor: 'rgba(255,255,255,0.5)' }} />
-            <IconButton sx={{ color: disliked ? 'red' : 'rgba(255,255,255,0.8)' }} onClick={handleDislike}>
+            <Box
+              sx={{
+                mx: 1,
+                height: "80%",
+                width: "1px",
+                backgroundColor: "rgba(255,255,255,0.5)",
+              }}
+            />
+            <IconButton
+              sx={{ color: disliked ? "red" : "rgba(255,255,255,0.8)" }}
+              onClick={handleDislike}
+            >
               <ThumbDownIcon fontSize="small" />
             </IconButton>
           </Box>
-          <Box 
-            sx={{ 
-              display: 'flex', 
-              alignItems: 'center',
-              backgroundColor: 'transparent',
-              borderRadius: '50px',
-              padding: '1px 12px',
-              border: '1px solid rgba(255,255,255,0.5)', 
-              flex: 'none', 
-              justifyContent: 'space-between',
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              backgroundColor: "transparent",
+              borderRadius: "50px",
+              padding: "1px 12px",
+              border: "1px solid rgba(255,255,255,0.5)",
+              flex: "none",
+              justifyContent: "space-between",
             }}
             onClick={handleCommentClick}
           >
-            <IconButton sx={{ color: 'rgba(255,255,255,0.8)' }}>
+            <IconButton sx={{ color: "rgba(255,255,255,0.8)" }}>
               <MailIcon fontSize="small" />
             </IconButton>
-            <Typography variant="caption" sx={{ ml: 1, color: 'rgba(255,255,255,0.8)' }}>
+            <Typography
+              variant="caption"
+              sx={{ ml: 1, color: "rgba(255,255,255,0.8)" }}
+            >
               {comments}
             </Typography>
           </Box>
@@ -323,27 +414,27 @@ const PublicTradeCard = ({
       </Card>
 
       {isOverlayOpen && (
-        <PublicTradeCardOverlay 
-          card={{ 
-            color, 
-            title, 
-            symbol, 
-            change, 
-            price1, 
-            price2, 
-            quantity, 
-            description, 
-            time, 
-            tags, 
-            emoji, 
-            likes, 
+        <PublicTradeCardOverlay
+          card={{
+            color,
+            title,
+            symbol,
+            profitLoss,
+            entryPoint,
+            exitPoint,
+            positionSize,
+            description,
+            time,
+            tags,
+            emoji,
+            likes,
             comments,
-            commentsList, 
-            userId, 
-            liked, 
-            disliked 
-          }} 
-          onClose={handleOverlayClose} 
+            commentsList,
+            userId,
+            liked,
+            disliked,
+          }}
+          onClose={handleOverlayClose}
         />
       )}
     </>

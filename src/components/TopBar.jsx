@@ -5,7 +5,6 @@ import {
   Avatar,
   Typography,
   IconButton,
-  InputBase,
   useMediaQuery,
   useTheme,
   Dialog,
@@ -13,10 +12,9 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
-  CircularProgress,
+  InputBase,
 } from "@mui/material";
 import {
-  Notifications,
   Search,
   NoteAlt,
   ShowChart,
@@ -24,15 +22,70 @@ import {
   Email,
   Menu,
   FilterList,
-  Close,
   Message,
   MoreHoriz,
+  PersonAdd,
+  PersonRemove,
+  Block,
+  Flag,
+  Close,
 } from "@mui/icons-material";
-import { NavLink, useLocation, useNavigate } from "react-router-dom"; // Import useNavigate
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import FilterOverlay from "./FilterOverlay";
 import DatePickerOverlay from "./DatePickerOverlay";
-import NotificationOverlay from "./NotificationOverlay";
 
+// Follow/Unfollow dialog
+const FollowUnfollowDialog = ({
+  open,
+  onClose,
+  isFollowing,
+  onFollowToggle,
+  onFlag,
+  onBlock,
+}) => (
+  <Dialog
+    open={open}
+    onClose={onClose}
+    sx={{
+      "& .MuiBackdrop-root": {
+        backgroundColor: "rgba(255, 255, 255, 0.1)",
+        backdropFilter: "blur(10px)",
+        WebkitBackdropFilter: "blur(10px)",
+      },
+      "& .MuiDialog-paper": {
+        borderRadius: "20px",
+        backgroundColor: "rgba(255, 255, 255, 0.95)",
+        padding: "10px",
+        maxWidth: "250px",
+        width: "100%",
+        textAlign: "center",
+      },
+    }}
+  >
+    <List>
+      <ListItem button onClick={onFollowToggle}>
+        <ListItemIcon>
+          {isFollowing ? <PersonRemove /> : <PersonAdd />}
+        </ListItemIcon>
+        <ListItemText primary={isFollowing ? "Unfollow User" : "Follow User"} />
+      </ListItem>
+      <ListItem button onClick={onFlag}>
+        <ListItemIcon>
+          <Flag />
+        </ListItemIcon>
+        <ListItemText primary="Flag User" />
+      </ListItem>
+      <ListItem button onClick={onBlock}>
+        <ListItemIcon>
+          <Block />
+        </ListItemIcon>
+        <ListItemText primary="Block User" />
+      </ListItem>
+    </List>
+  </Dialog>
+);
+
+// SearchOverlay component
 const SearchOverlay = ({ open, onClose }) => (
   <Box
     sx={{
@@ -74,27 +127,7 @@ const SearchOverlay = ({ open, onClose }) => (
   </Box>
 );
 
-const IconButtonContainer = ({ to, children, isActive }) => (
-  <NavLink to={to} style={{ textDecoration: "none" }}>
-    <Box
-      sx={{
-        width: "51px",
-        height: "51px",
-        background: isActive ? "#FFFFFF" : "transparent",
-        borderRadius: "50%",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        mx: 1,
-      }}
-    >
-      <IconButton size="large" sx={{ color: isActive ? "black" : "white" }}>
-        {children}
-      </IconButton>
-    </Box>
-  </NavLink>
-);
-
+// Mobile Menu Overlay for Tablet and Mobile View
 const CenteredMenuOverlay = ({ open, onClose, menuItems }) => (
   <Dialog
     open={open}
@@ -132,64 +165,79 @@ const CenteredMenuOverlay = ({ open, onClose, menuItems }) => (
   </Dialog>
 );
 
+// IconButtonContainer component
+const IconButtonContainer = ({ to, children, isActive }) => (
+  <NavLink to={to} style={{ textDecoration: "none" }}>
+    <Box
+      sx={{
+        width: "51px",
+        height: "51px",
+        background: isActive ? "#FFFFFF" : "transparent",
+        borderRadius: "50%",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        mx: 1,
+      }}
+    >
+      <IconButton size="large" sx={{ color: isActive ? "black" : "white" }}>
+        {children}
+      </IconButton>
+    </Box>
+  </NavLink>
+);
+
 const TopBar = ({
   user,
   userId,
   avatar,
   profileData,
-  onApplyFilters,
+  onApplyFilters, // Make sure this is passed from the parent component
   onApplyDateRange,
   onResetDateRange,
   strategies,
+  isFollowing, // Pass this to manage follow/unfollow state
+  onFollowToggle, // Function to toggle follow/unfollow
+  onFlagUser, // Function to flag the user
+  onBlockUser, // Function to block the user
 }) => {
   const location = useLocation();
-  const navigate = useNavigate(); // Initialize navigate
+  const navigate = useNavigate();
   const [searchOpen, setSearchOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [notificationOpen, setNotificationOpen] = useState(false);
-  const [notifications, setNotifications] = useState([]);
-  const [isOverlayOpen, setIsOverlayOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false); // Handle for mobile/tablet menu
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
 
-  useEffect(() => {
-    if (notificationOpen && user?.userId) {
-      fetchNotifications();
-    }
-  }, [notificationOpen]);
-
-  const fetchNotifications = async () => {
-    const fetchedNotifications = await getNotifications(user.userId);
-    setNotifications(
-      Object.entries(fetchedNotifications || {}).map(([id, data]) => ({
-        id,
-        ...data,
-      })),
-    );
+  // Handle message button to start chat
+  const handleMessageClick = () => {
+    navigate(`/messages?user=${profileData?.userId}`);
   };
 
-  const handleNotificationClick = () => {
-    setNotificationOpen(true);
+  const handleThreeDotClick = () => {
+    setDialogOpen(true);
   };
 
-  const handleNotificationClose = () => {
-    setNotificationOpen(false);
+  const handleDialogClose = () => {
+    setDialogOpen(false);
   };
 
-  const handleMarkAsRead = async (notificationId) => {
-    if (user?.userId) {
-      await markNotificationAsRead(user.userId, notificationId);
-      setNotifications(
-        notifications.map((notification) =>
-          notification.id === notificationId
-            ? { ...notification, read: true }
-            : notification,
-        ),
-      );
-    }
+  const handleFollowToggle = () => {
+    onFollowToggle(profileData?.userId);
+    handleDialogClose();
+  };
+
+  const handleFlagUser = () => {
+    onFlagUser(profileData?.userId);
+    handleDialogClose();
+  };
+
+  const handleBlockUser = () => {
+    onBlockUser(profileData?.userId);
+    handleDialogClose();
   };
 
   const handleSearchClick = () => {
@@ -208,35 +256,37 @@ const TopBar = ({
     setFilterOpen(false);
   };
 
-  const handleMenuToggle = () => setMenuOpen(!menuOpen);
-
   const handleApplyFilters = (newFilters) => {
     if (onApplyFilters) {
       onApplyFilters(newFilters);
     }
     setFilterOpen(false);
-    handleFilterClose();
   };
 
   const handleResetFilters = () => {
-    onApplyFilters({ emotions: [], symbols: [], sessions: [], strategies: [] });
+    if (onApplyFilters) {
+      onApplyFilters({
+        emotions: [],
+        symbols: [],
+        sessions: [],
+        strategies: [],
+      });
+    }
     handleFilterClose();
   };
 
-  // Debugging: Check if userId and avatar are being passed
-  useEffect(() => {
-    console.log("TopBar userId:", userId); // Check userId received
-    console.log("TopBar avatar:", avatar); // Check avatar received
-  }, [userId, avatar]);
+  const handleMenuToggle = () => {
+    setMenuOpen(!menuOpen);
+  };
 
   const handleAvatarClick = () => {
-    navigate("/profile-settings"); // Navigate to the profile settings page
+    navigate("/profile-settings");
   };
 
   const getTitle = () => {
     switch (location.pathname) {
       case "/":
-        return `Hi 👋 ${user?.userId || userId}`; // Greet with user ID on the Dashboard
+        return `Hi 👋 ${user?.userId || userId}`;
       case "/community":
         return "Community";
       case "/analytics":
@@ -303,7 +353,8 @@ const TopBar = ({
                   sx={{
                     width: "51px",
                     height: "51px",
-                    background: "linear-gradient(180deg, #FCEBDE 0%, #F7D3BA 100%)",
+                    background:
+                      "linear-gradient(180deg, #FCEBDE 0%, #F7D3BA 100%)",
                     border: "2px solid #FFFFFF",
                   }}
                   src={profileData?.avatar || avatar}
@@ -329,10 +380,10 @@ const TopBar = ({
               <Box
                 sx={{ display: "flex", alignItems: "center", ml: 2, gap: 1 }}
               >
-                <IconButton sx={buttonStyle}>
+                <IconButton sx={buttonStyle} onClick={handleMessageClick}>
                   <Message />
                 </IconButton>
-                <IconButton sx={buttonStyle}>
+                <IconButton sx={buttonStyle} onClick={handleThreeDotClick}>
                   <MoreHoriz />
                 </IconButton>
               </Box>
@@ -349,8 +400,8 @@ const TopBar = ({
                         "linear-gradient(180deg, #FCEBDE 0%, #F7D3BA 100%)",
                       border: "2px solid #FFFFFF",
                     }}
-                    src={user?.avatar || avatar} // Updated to reflect the avatar from the user prop
-                    alt={user?.userId || userId}  // Display userId from the user prop
+                    src={user?.avatar || avatar}
+                    alt={user?.userId || userId}
                   />
                 </IconButton>
                 {!isMobile && !isTablet && (
@@ -373,22 +424,12 @@ const TopBar = ({
               <Box
                 sx={{ display: "flex", alignItems: "center", ml: 2, gap: 1 }}
               >
-                <IconButton sx={buttonStyle} onClick={handleNotificationClick}>
-                  <Notifications />
-                </IconButton>
-                <IconButton onClick={handleSearchClick} sx={buttonStyle}>
+                <IconButton sx={buttonStyle} onClick={handleSearchClick}>
                   <Search />
                 </IconButton>
-                {location.pathname === "/analytics" ||
-                location.pathname === "/messages" ? (
-                  <IconButton onClick={handleFilterClick} sx={buttonStyle}>
-                    <FilterList />
-                  </IconButton>
-                ) : (
-                  <IconButton onClick={handleFilterClick} sx={buttonStyle}>
-                    <FilterList />
-                  </IconButton>
-                )}
+                <IconButton onClick={handleFilterClick} sx={buttonStyle}>
+                  <FilterList />
+                </IconButton>
               </Box>
             </>
           )}
@@ -417,7 +458,12 @@ const TopBar = ({
         </Box>
       </AppBar>
 
-      <SearchOverlay open={searchOpen} onClose={handleSearchClose} />
+      {/* Search Overlay */}
+      {searchOpen && (
+        <SearchOverlay open={searchOpen} onClose={handleSearchClose} />
+      )}
+
+      {/* Filter Overlay */}
       {location.pathname === "/analytics" ||
       location.pathname === "/messages" ? (
         <DatePickerOverlay
@@ -436,18 +482,22 @@ const TopBar = ({
         />
       )}
 
+      {/* Follow/Unfollow Dialog */}
+      <FollowUnfollowDialog
+        open={dialogOpen}
+        onClose={handleDialogClose}
+        isFollowing={isFollowing}
+        onFollowToggle={handleFollowToggle}
+        onFlag={handleFlagUser}
+        onBlock={handleBlockUser}
+      />
+
+      {/* Mobile Menu Overlay */}
       <CenteredMenuOverlay
         open={menuOpen}
         onClose={handleMenuToggle}
         menuItems={menuItems}
       />
-      {notificationOpen && (
-        <NotificationOverlay
-          notifications={notifications}
-          onClose={handleNotificationClose}
-          onMarkAsRead={handleMarkAsRead}
-        />
-      )}
     </>
   );
 };

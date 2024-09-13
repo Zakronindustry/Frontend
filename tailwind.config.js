@@ -8,11 +8,12 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        popins: ["Poppins", "sans-serif"],
+        poppins: ["Poppins", "sans-serif"],
         inter: ["Inter", "sans-serif"],
         orbitron: ["Orbitron", "sans-serif"],
         roboto: ["Roboto", "sans-serif"],
-        },
+        montserrat: ["Montserrat", "sans-serif"], // Add Montserrat here
+      },
     },
   },
   plugins: [

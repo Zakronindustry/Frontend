@@ -1,187 +1,184 @@
-      import React, { useState, useEffect } from 'react';
-      import { Box, Grid, Typography, Card, List, ListItem, ListItemText } from '@mui/material';
-      import { Doughnut, Bar } from 'react-chartjs-2';
-      import ChartDataLabels from 'chartjs-plugin-datalabels';
-      import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
-      import PieChartIcon from '@mui/icons-material/PieChart';
-      import {
-        Chart as ChartJS,
-        ArcElement,
-        Tooltip,
-        Legend,
-        CategoryScale,
-        LinearScale,
-        BarElement,
-      } from 'chart.js';
-      import TopBar from './TopBar';
-      import BottomBar from './BottomBar';
-      import TradeForm from './TradeForm';
-      import DatePickerOverlay from './DatePickerOverlay';
-      import { getUserTrades } from '../firebaseRealtimeCrud'; // Import the Firebase function to fetch trades
+import React, { useState, useEffect } from 'react';
+import { Box, Grid, Typography, Card, List, ListItem, ListItemText } from '@mui/material';
+import { Doughnut, Bar } from 'react-chartjs-2';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import PieChartIcon from '@mui/icons-material/PieChart';
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+} from 'chart.js';
+import TopBar from './TopBar';
+import BottomBar from './BottomBar';
+import TradeForm from './TradeForm';
+import DatePickerOverlay from './DatePickerOverlay';
+import { listenToUserTrades } from '../firebaseRealtimeCrud'; // Import the Firebase listener function
 
-      // Register the required components
-      ChartJS.register(ArcElement, Tooltip, Legend, ChartDataLabels, CategoryScale, LinearScale, BarElement);
+// Register the required components
+ChartJS.register(ArcElement, Tooltip, Legend, ChartDataLabels, CategoryScale, LinearScale, BarElement);
 
-      const Analytics = ({ userId }) => {
-        const [selectedEmotion, setSelectedEmotion] = useState(null);
-        const [isFormOpen, setIsFormOpen] = useState(false);
-        const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
-        const [selectedDateRange, setSelectedDateRange] = useState({
-          startDate: null,
-          endDate: null,
-        });
+const Analytics = ({ userId }) => {
+  const [selectedEmotion, setSelectedEmotion] = useState(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [selectedDateRange, setSelectedDateRange] = useState({
+    startDate: null,
+    endDate: null,
+  });
 
-        const [tradeNotes, setTradeNotes] = useState([]); // Hold fetched trades
-        const [topInstruments, setTopInstruments] = useState([]);
-        const [topStrategies, setTopStrategies] = useState([]);
+  const [tradeNotes, setTradeNotes] = useState([]); // Hold fetched trades
+  const [topInstruments, setTopInstruments] = useState([]);
+  const [topStrategies, setTopStrategies] = useState([]);
 
-        useEffect(() => {
-          const fetchTrades = async () => {
-            if (!userId) return;
+  // Fetch real-time trades for the logged-in user
+  useEffect(() => {
+    if (!userId) return;
 
-            try {
-              const trades = await getUserTrades(userId); // Fetch user's trades from Firebase
-              setTradeNotes(trades || []); // Set trades or fallback to empty array
-              calculateTopInstruments(trades || []);
-              calculateTopStrategies(trades || []);
-            } catch (error) {
-              console.error('Error fetching trade notes:', error);
-            }
-          };
+    const unsubscribe = listenToUserTrades(userId, (trades) => {
+      console.log("Fetched trades:", trades); // Add this log to verify data
+      setTradeNotes(trades || []); // Update the state with the fetched trades
+      calculateTopInstruments(trades || []); // Process instruments
+      calculateTopStrategies(trades || []); // Process strategies
+    });
 
-          fetchTrades();
-        }, [userId]);
+    return () => unsubscribe();
+  }, [userId]);
 
-        // Function to calculate the top 5 instruments dynamically based on the trades
-        const calculateTopInstruments = (trades) => {
-          const instrumentCounts = {};
+  // Function to calculate the top 5 instruments dynamically based on the trades
+  const calculateTopInstruments = (trades) => {
+    const instrumentCounts = {};
 
-          trades.forEach((trade) => {
-            const instrument = trade.symbol;
-            if (instrument) {
-              instrumentCounts[instrument] = (instrumentCounts[instrument] || 0) + 1;
-            }
-          });
+    trades.forEach((trade) => {
+      const instrument = trade.symbol;
+      if (instrument) {
+        instrumentCounts[instrument] = (instrumentCounts[instrument] || 0) + 1;
+      }
+    });
 
-          const sortedInstruments = Object.entries(instrumentCounts)
-            .sort((a, b) => b[1] - a[1]) // Sort by count
-            .slice(0, 5); // Get top 5
+    const sortedInstruments = Object.entries(instrumentCounts)
+      .sort((a, b) => b[1] - a[1]) // Sort by count
+      .slice(0, 5); // Get top 5
 
-          setTopInstruments(sortedInstruments.map(([instrument, count]) => ({
-            instrument,
-            trades: count,
-            winRate: calculateWinRateForInstrument(trades, instrument),
-          })));
-        };
+    setTopInstruments(sortedInstruments.map(([instrument, count]) => ({
+      instrument,
+      trades: count,
+      winRate: calculateWinRateForInstrument(trades, instrument),
+    })));
+  };
 
-        // Function to calculate the win rate for a specific instrument
-        const calculateWinRateForInstrument = (trades, instrument) => {
-          const relevantTrades = trades.filter(trade => trade.symbol === instrument);
-          const wins = relevantTrades.filter(trade => trade.profitLoss > 0).length;
-          return relevantTrades.length > 0 ? Math.round((wins / relevantTrades.length) * 100) : 0;
-        };
+  // Function to calculate the win rate for a specific instrument
+  const calculateWinRateForInstrument = (trades, instrument) => {
+    const relevantTrades = trades.filter(trade => trade.symbol === instrument);
+    const wins = relevantTrades.filter(trade => trade.profitLoss > 0).length;
+    return relevantTrades.length > 0 ? Math.round((wins / relevantTrades.length) * 100) : 0;
+  };
 
-        // Function to calculate the top 5 strategies dynamically based on the trades
-        const calculateTopStrategies = (trades) => {
-          const strategyCounts = {};
+  // Function to calculate the top 5 strategies dynamically based on the trades
+  const calculateTopStrategies = (trades) => {
+    const strategyCounts = {};
 
-          trades.forEach((trade) => {
-            const strategies = trade.tags || []; // Assuming tags are stored as an array in trade data
-            strategies.forEach((strategy) => {
-              strategyCounts[strategy] = (strategyCounts[strategy] || 0) + 1;
-            });
-          });
+    trades.forEach((trade) => {
+      const strategies = trade.tags || []; // Assuming tags are stored as an array in trade data
+      strategies.forEach((strategy) => {
+        strategyCounts[strategy] = (strategyCounts[strategy] || 0) + 1;
+      });
+    });
 
-          const sortedStrategies = Object.entries(strategyCounts)
-            .sort((a, b) => b[1] - a[1]) // Sort by count
-            .slice(0, 5); // Get top 5
+    const sortedStrategies = Object.entries(strategyCounts)
+      .sort((a, b) => b[1] - a[1]) // Sort by count
+      .slice(0, 5); // Get top 5
 
-          setTopStrategies(sortedStrategies.map(([strategy, count]) => ({
-            strategy,
-            trades: count,
-            winRate: calculateWinRateForStrategy(trades, strategy),
-          })));
-        };
+    setTopStrategies(sortedStrategies.map(([strategy, count]) => ({
+      strategy,
+      trades: count,
+      winRate: calculateWinRateForStrategy(trades, strategy),
+    })));
+  };
 
-        // Function to calculate the win rate for a specific strategy
-        const calculateWinRateForStrategy = (trades, strategy) => {
-          const relevantTrades = trades.filter(trade => trade.tags && trade.tags.includes(strategy));
-          const wins = relevantTrades.filter(trade => trade.profitLoss > 0).length;
-          return relevantTrades.length > 0 ? Math.round((wins / relevantTrades.length) * 100) : 0;
-        };
+  // Function to calculate the win rate for a specific strategy
+  const calculateWinRateForStrategy = (trades, strategy) => {
+    const relevantTrades = trades.filter(trade => trade.tags && trade.tags.includes(strategy));
+    const wins = relevantTrades.filter(trade => trade.profitLoss > 0).length;
+    return relevantTrades.length > 0 ? Math.round((wins / relevantTrades.length) * 100) : 0;
+  };
 
-        // Default values for analytics when no user data is present
-        const defaultMoods = [
-          { emotion: 'Frustrated', trades: 0, winRate: 0 },
-          { emotion: 'Anxious', trades: 0, winRate: 0 },
-          { emotion: 'Calm', trades: 0, winRate: 0 },
-          { emotion: 'Confident', trades: 0, winRate: 0 },
-          { emotion: 'Greedy', trades: 0, winRate: 0 },
-        ];
+  // Default values for analytics when no user data is present
+  const defaultMoods = [
+    { emotion: 'Frustrated', trades: 0, winRate: 0 },
+    { emotion: 'Anxious', trades: 0, winRate: 0 },
+    { emotion: 'Calm', trades: 0, winRate: 0 },
+    { emotion: 'Confident', trades: 0, winRate: 0 },
+    { emotion: 'Greedy', trades: 0, winRate: 0 },
+  ];
 
-        const defaultSessions = [
-          { sessionName: 'Morning Session', trades: 0, winRate: 0 },
-          { sessionName: 'Midday Session', trades: 0, winRate: 0 },
-          { sessionName: 'Afternoon Session', trades: 0, winRate: 0 },
-          { sessionName: 'Evening Session', trades: 0, winRate: 0 },
-          { sessionName: 'Late Session', trades: 0, winRate: 0 },
-        ];
+  const defaultSessions = [
+    { sessionName: 'Morning Session', trades: 0, winRate: 0 },
+    { sessionName: 'Midday Session', trades: 0, winRate: 0 },
+    { sessionName: 'Afternoon Session', trades: 0, winRate: 0 },
+    { sessionName: 'Evening Session', trades: 0, winRate: 0 },
+    { sessionName: 'Late Session', trades: 0, winRate: 0 },
+  ];
 
-        const doughnutData = {
-          labels: ['Frustrated', 'Anxious', 'Calm', 'Confident', 'Greedy'],
-          datasets: [{
-            data: [0, 0, 0, 0, 0], // Default to 0 until user creates trades
-            backgroundColor: ['#C1BCBC', '#F5BCBB', '#D0E9BC', '#B0DCF0', '#F5E0B2'],
-          }],
-        };
+  const doughnutData = {
+    labels: ['Frustrated', 'Anxious', 'Calm', 'Confident', 'Greedy'],
+    datasets: [{
+      data: [0, 0, 0, 0, 0], // Default to 0 until user creates trades
+      backgroundColor: ['#C1BCBC', '#F5BCBB', '#D0E9BC', '#B0DCF0', '#F5E0B2'],
+    }],
+  };
 
-        const doughnutOptions = {
-          plugins: {
-            legend: {
-              display: false, // Disable the legend
-            },
-            datalabels: {
-              color: '#fff',
-              font: {
-                size: 35,
-              },
-              formatter: (value, context) => {
-                return context.chart.data.labels[context.dataIndex];
-              },
-            },
-          },
-          cutout: '60%',
-        };
+  const doughnutOptions = {
+    plugins: {
+      legend: {
+        display: false, // Disable the legend
+      },
+      datalabels: {
+        color: '#fff',
+        font: {
+          size: 35,
+        },
+        formatter: (value, context) => {
+          return context.chart.data.labels[context.dataIndex];
+        },
+      },
+    },
+    cutout: '60%',
+  };
 
-        // Function to handle date picker overlay
-        const handleDatePickerOpen = () => {
-          setIsDatePickerOpen(true);
-        };
+  // Function to handle date picker overlay
+  const handleDatePickerOpen = () => {
+    setIsDatePickerOpen(true);
+  };
 
-        const handleDatePickerClose = () => {
-          setIsDatePickerOpen(false);
-        };
+  const handleDatePickerClose = () => {
+    setIsDatePickerOpen(false);
+  };
 
-        const handleApplyDateRange = (range) => {
-          setSelectedDateRange(range);
-          console.log("Selected date range:", range);
-        };
+  const handleApplyDateRange = (range) => {
+    setSelectedDateRange(range);
+    console.log("Selected date range:", range);
+  };
 
-        const handleEmotionSelect = (emotion) => {
-          setSelectedEmotion(emotion);
-          setIsFormOpen(true);
-        };
+  const handleEmotionSelect = (emotion) => {
+    setSelectedEmotion(emotion);
+    setIsFormOpen(true);
+  };
 
-        const handleFormClose = () => {
-          setIsFormOpen(false);
-          setSelectedEmotion(null);
-        };
+  const handleFormClose = () => {
+    setIsFormOpen(false);
+    setSelectedEmotion(null);
+  };
 
-        // Handle form save (stub, actual save logic can go here)
-        const handleFormSave = (tradeData) => {
-          console.log("Trade saved:", tradeData);
-          handleFormClose();
-        };
+  // Handle form save (stub, actual save logic can go here)
+  const handleFormSave = (tradeData) => {
+    console.log("Trade saved:", tradeData);
+    handleFormClose();
+  };
 
         return (
           <Box sx={{ bgcolor: '#FCF6F1', minHeight: '100vh', pb: '100px' }}>

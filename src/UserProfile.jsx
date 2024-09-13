@@ -13,6 +13,17 @@ const UserProfile = () => {
   const [publicTrades, setPublicTrades] = useState([]);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const handleStartChat = async () => {
+    try {
+      // Use the logged-in user's ID and the visited user's ID to start the chat
+      const chatId = await startChatWithUser(user.userId, visitedUser.userId, "Chat request"); // Pass the initial message
+
+      // After creating the chat, navigate to the Messages page with the chat ID
+      navigate(`/messages?chatId=${chatId}`);
+    } catch (error) {
+      console.error("Error starting chat: ", error);
+    }
+  };
 
   useEffect(() => {
     const fetchUserProfileAndTrades = async () => {
@@ -35,6 +46,7 @@ const UserProfile = () => {
   if (!userData) {
     return <Typography>Loading...</Typography>; // Show a loading message while data is being fetched
   }
+
 
   return (
     <Box

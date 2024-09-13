@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Grid, Typography } from '@mui/material';
 import PublicTradeCard from './PublicTradeCard';
-import { getPublicTrades } from "../firebaseRealtimeCrud";
+import { listenToPublicTrades } from "../firebaseRealtimeCrud"; 
 import BottomBar from './BottomBar';
 import TradeForm from './TradeForm';
 import { parse, isWithinInterval } from 'date-fns';
 
 const CommunityPage = ({ filters }) => {
-  const [allTradeCards, setAllTradeCards] = useState([]); // Stores all trades
-  const [filteredTradeCards, setFilteredTradeCards] = useState([]); // Stores filtered trades
+  const [allTradeCards, setAllTradeCards] = useState([]); 
+  const [filteredTradeCards, setFilteredTradeCards] = useState([]); 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedEmotion, setSelectedEmotion] = useState(null);
 
@@ -16,15 +16,15 @@ const CommunityPage = ({ filters }) => {
     let filteredCards = allTradeCards.filter(trade => trade.isPublic);
 
     if (filters && Object.keys(filters).length > 0) {
-      if (filters.emotions?.length > 0) {
+      if (filters.emotion?.length > 0) {
         filteredCards = filteredCards.filter(card =>
-          filters.emotions.includes(card.emoji)
+          filters.emotion.includes(card.emoji)
         );
       }
 
-      if (filters.symbols?.length > 0) {
+      if (filters.instrument?.length > 0) {
         filteredCards = filteredCards.filter(card =>
-          filters.symbols.includes(card.symbol)
+          filters.instrument.includes(card.instrument)
         );
       }
 
@@ -50,7 +50,7 @@ const CommunityPage = ({ filters }) => {
             });
           } catch (error) {
             console.error("Error parsing date for card:", card, error);
-            return false; // Skip this card if there's a parsing error
+            return false; 
           }
         });
       }
@@ -59,28 +59,25 @@ const CommunityPage = ({ filters }) => {
     setFilteredTradeCards(filteredCards);
   };
 
-  // Fetch public trades
+  // Fetch public trades in real-time
   useEffect(() => {
-    const fetchPublicTrades = async () => {
-      try {
-        const publicTrades = await getPublicTrades();
-        const tradeCards = Object.values(publicTrades || {});
-        setAllTradeCards(tradeCards); // Store all trades in state
-        setFilteredTradeCards(tradeCards); // Initially, display all trades
-      } catch (error) {
-        console.error("Error fetching public trades:", error);
-        setAllTradeCards([]);
-        setFilteredTradeCards([]); // Set empty array on error
-      }
+    const handleNewPublicTrades = (newTrades) => {
+      const tradeCards = Object.values(newTrades || {});
+      setAllTradeCards(tradeCards); 
+      setFilteredTradeCards(tradeCards); 
     };
 
-    fetchPublicTrades();
+    const unsubscribe = listenToPublicTrades(handleNewPublicTrades);
+
+    return () => {
+      // Unsubscribe from real-time updates when component unmounts
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
-  // Apply filters whenever the filters or allTradeCards change
   useEffect(() => {
     applyFilters(filters);
-  }, [filters, allTradeCards]); // Depend on filters and allTradeCards
+  }, [filters, allTradeCards]);
 
   const handleEmotionSelect = (emotion) => {
     setSelectedEmotion(emotion);
@@ -100,7 +97,7 @@ const CommunityPage = ({ filters }) => {
       emoji: getEmojiForEmotion(selectedEmotion),
       isPublic: true,
     };
-    setAllTradeCards([newTradeCard, ...allTradeCards]); // Update allTradeCards
+    setAllTradeCards([newTradeCard, ...allTradeCards]); 
     handleFormClose();
   };
 
@@ -111,7 +108,6 @@ const CommunityPage = ({ filters }) => {
       case 'Confident': return '#B0DCF0';
       case 'Greedy': return '#F5E0B2';
       case 'Frustrated': return '#C1BCBC';
-      default: return '#FFFFFF';
     }
   };
 
@@ -122,7 +118,6 @@ const CommunityPage = ({ filters }) => {
       case 'Confident': return '😎';
       case 'Greedy': return '🤑';
       case 'Frustrated': return '😠';
-      default: return '😊';
     }
   };
 
@@ -133,7 +128,25 @@ const CommunityPage = ({ filters }) => {
           {filteredTradeCards.length > 0 ? (
             filteredTradeCards.map((card, index) => (
               <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
-                <PublicTradeCard {...card} />
+                <PublicTradeCard
+                  id={card.id}
+                  color={getColorForEmotion(card.color)}
+                  emotion={card.emotion}
+                  reason={card.title}
+                  instrument={card.instrument}
+                  profitLoss={card.profitLoss}
+                  entryPoint={card.entryPoint}
+                  exitPoint={card.exitPoint}
+                  positionSize={card.positionSize}
+                  description={card.description}
+                  time={card.time}
+                  tags={card.tags}
+                  emoji={getEmojiForEmotion(card.emotion)}
+                  likes={card.likes}
+                  comments={card.comments}
+                  commentsList={card.commentsList}
+                  userId={card.userId}
+                />
               </Grid>
             ))
           ) : (

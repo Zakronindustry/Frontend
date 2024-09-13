@@ -43,7 +43,7 @@ const BottomBar = ({ onCreateTradeCard }) => (
   >
     <EmotionChip emoji="😠" color="#C1BCBC" onClick={() => onCreateTradeCard('frustrated')} />
     <EmotionChip emoji="🤯" color="#F5BCBB" onClick={() => onCreateTradeCard('anxious')} />
-    <EmotionChip emoji="😊" color="#D0E9BC" onClick={() => onCreateTradeCard('happy')} />
+    <EmotionChip emoji="😊" color="#D0E9BC" onClick={() => onCreateTradeCard('calm')} />
     <EmotionChip emoji="😎" color="#B0DCF0" onClick={() => onCreateTradeCard('confident')} />
     <EmotionChip emoji="🤑" color="#F5E0B2" onClick={() => onCreateTradeCard('greedy')} />
   </Box>

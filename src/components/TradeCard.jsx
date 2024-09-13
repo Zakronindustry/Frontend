@@ -9,18 +9,17 @@ import {
   Menu,
   MenuItem,
 } from "@mui/material";
-import ShareIcon from "@mui/icons-material/Share";
-
 import MoreHorizOutlinedIcon from '@mui/icons-material/MoreHorizOutlined';
 
 const TradeCard = ({
   color,
-  title,
-  symbol,
-  change,
-  price1,
-  price2,
-  quantity,
+  emotion,
+  reason,
+  instrument,
+  profitLoss,
+  entryPoint,
+  exitPoint,
+  positionSize,
   description,
   time,
   tags = [],
@@ -91,20 +90,6 @@ const TradeCard = ({
           right: 25,
         }}
       >
-        <IconButton
-          size="small"
-          sx={{
-            backgroundColor: "rgba(255, 255, 255, 0.4)",
-            borderRadius: "50%",
-            zIndex: 10,
-            color: "black",
-            marginRight: "8px", // Adjust margin between buttons
-            
-          }}
-          onClick={(e) => e.stopPropagation()} // Prevents triggering the card's onClick event
-        >
-          <ShareIcon fontSize="small" />
-        </IconButton>
 
         <IconButton
           size="small"
@@ -159,12 +144,12 @@ const TradeCard = ({
         </Box>
 
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1, mt: 1 }}>
-          <Typography variant="h6" sx={{ fontWeight: 'semibold', fontSize: '1.2rem', maxWidth: '100%' }}>{title}</Typography>
+          <Typography variant="h6" sx={{ fontWeight: 'semibold', fontSize: '1.2rem', maxWidth: '100%' }}>{reason}</Typography>
         </Box>
 
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 1 }}>
           <Chip
-            label={symbol}
+            label={instrument}
             size="small"
             sx={{
               backgroundColor: "rgba(255,255,255,0.7)",
@@ -174,7 +159,7 @@ const TradeCard = ({
             }}
           />
           <Chip
-            label={change}
+            label={profitLoss}
             size="small"
             sx={{
               backgroundColor: "rgba(255,255,255,0.7)",
@@ -187,7 +172,7 @@ const TradeCard = ({
 
         <Box sx={{ display: "flex", gap: 1, mb: 1 }}>
           <Chip
-            label={price1}
+            label={entryPoint}
             size="small"
             sx={{
               backgroundColor: "rgba(255,255,255,0.7)",
@@ -196,7 +181,7 @@ const TradeCard = ({
             }}
           />
           <Chip
-            label={price2}
+            label={exitPoint}
             size="small"
             sx={{
               backgroundColor: "rgba(255,255,255,0.7)",
@@ -205,7 +190,7 @@ const TradeCard = ({
             }}
           />
           <Chip
-            label={quantity}
+            label={positionSize}
             size="small"
             sx={{
               backgroundColor: "rgba(255,255,255,0.7)",

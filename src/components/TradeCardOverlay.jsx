@@ -72,12 +72,12 @@ const TradeCardOverlay = ({ card, onClose }) => (
         }}
       >
         <Typography variant="h5" sx={{ mb: 2 }}>
-          {card.title}
+          {card.reason}
         </Typography>
 
         <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
           <Chip
-            label={card.symbol}
+            label={card.instrument}
             size="small"
             sx={{
               backgroundColor: 'rgba(255,255,255,0.7)',
@@ -86,7 +86,7 @@ const TradeCardOverlay = ({ card, onClose }) => (
             }}
           />
           <Chip
-            label={card.change}
+            label={card.profitLoss}
             size="small"
             sx={{
               backgroundColor: 'rgba(255,255,255,0.7)',
@@ -95,7 +95,7 @@ const TradeCardOverlay = ({ card, onClose }) => (
             }}
           />
           <Chip
-            label={card.price1}
+            label={card.entryPoint}
             size="small"
             sx={{
               backgroundColor: 'rgba(255,255,255,0.7)',
@@ -103,7 +103,7 @@ const TradeCardOverlay = ({ card, onClose }) => (
             }}
           />
           <Chip
-            label={card.price2}
+            label={card.exitPoint}
             size="small"
             sx={{
               backgroundColor: 'rgba(255,255,255,0.7)',
@@ -111,7 +111,7 @@ const TradeCardOverlay = ({ card, onClose }) => (
             }}
           />
           <Chip
-            label={card.quantity}
+            label={card.positionSize}
             size="small"
             sx={{
               backgroundColor: 'rgba(255,255,255,0.7)',

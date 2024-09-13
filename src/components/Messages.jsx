@@ -1,66 +1,147 @@
-import React, { useState } from 'react';
-import { Box, Grid, Typography, Button, TextField, IconButton, Avatar, AvatarGroup } from '@mui/material';
-import TopBar from './TopBar';
-import AddIcon from '@mui/icons-material/Add';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import ImageIcon from '@mui/icons-material/Image';
-import SendIcon from '@mui/icons-material/Send';
-import DatePickerOverlay from './DatePickerOverlay'; // Import DatePickerOverlay
+import React, { useState, useEffect } from "react";
+import {
+  Box,
+  Grid,
+  Typography,
+  Button,
+  TextField,
+  IconButton,
+  Avatar,
+  AvatarGroup,
+  Dialog,
+  List,
+  ListItem,
+  ListItemText,
+} from "@mui/material";
+import TopBar from "./TopBar";
+import AddIcon from "@mui/icons-material/Add";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import ImageIcon from "@mui/icons-material/Image";
+import SendIcon from "@mui/icons-material/Send";
+import DatePickerOverlay from "./DatePickerOverlay"; // Import DatePickerOverlay
+import {
+  getChatByUsers,
+  sendMessageToChat,
+  listenToMessages,
+  createChatRequest,
+  getUsersList,
+  addUserToGroupChat,
+} from "../firebaseRealtimeCrud"; // Import Firebase helper functions
 
-const sampleChats = [
-  { id: 1, name: 'AxelMathilda', lastMessage: 'Yep, BTC/USD short opportunity this week.', avatar: '/api/placeholder/32/32', isActive: true },
-  { id: 2, name: 'Bankman', lastMessage: 'Exactly what I am talking about and I...', avatar: '/api/placeholder/32/32' },
-  { id: 3, name: 'M@rkmill', lastMessage: 'Hello, I saw your log on BTC/USD this article might be interesting to you. Let\'s connect.', avatar: '/api/placeholder/32/32', isRequest: true },
-  { id: 4, name: 'Project Team', lastMessage: 'When will we do group work? It\'s been a while guys.', avatar: '/api/placeholder/32/32', isGroup: true },
-  { id: 5, name: 'Hustle@cash', lastMessage: 'I can see a short opportunity for NDQ 🚀', avatar: '/api/placeholder/32/32' },
-];
-
-const Messages = () => {
-  const [activeTab, setActiveTab] = useState('All');
-  const [activeChat, setActiveChat] = useState(sampleChats[0]);
+const Messages = ({ selectedUser }) => {
+  const [activeTab, setActiveTab] = useState("All");
+  const [activeChat, setActiveChat] = useState(null); // Chat data for the active chat
+  const [chatMessages, setChatMessages] = useState([]); // Messages in the current chat
+  const [newMessage, setNewMessage] = useState(""); // New message being typed
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false); // State for Date Picker
+  const [userList, setUserList] = useState([]); // List of users to add to the group
+  const [openUserModal, setOpenUserModal] = useState(false); // Modal state
 
-  const handleTabChange = (tab) => {
-    setActiveTab(tab);
+  // On component mount, fetch or create the chat between the logged-in user and the selected user
+  useEffect(() => {
+    const fetchOrCreateChat = async () => {
+      if (selectedUser) {
+        // Fetch the chat by user IDs (assuming you have a loggedInUser ID and selectedUser ID)
+        const chat = await getChatByUsers(
+          loggedInUser.userId,
+          selectedUser.userId,
+        );
+        if (chat) {
+          setActiveChat(chat);
+          // Listen to the messages in the chat
+          listenToMessages(chat.chatId, setChatMessages);
+        } else {
+          // Create a new chat request if no chat exists
+          const newChat = await createChatRequest(
+            loggedInUser.userId,
+            selectedUser.userId,
+            `${loggedInUser.userId} wants to start a chat.`,
+          );
+          setActiveChat(newChat);
+          listenToMessages(newChat.chatId, setChatMessages);
+        }
+      }
+    };
+
+    fetchOrCreateChat();
+  }, [selectedUser]);
+
+  // Function to handle sending a new message
+  const handleSendMessage = async () => {
+    if (newMessage.trim() && activeChat) {
+      await sendMessageToChat(
+        activeChat.chatId,
+        loggedInUser.userId,
+        newMessage,
+      );
+      setNewMessage(""); // Clear the input after sending the message
+    }
   };
 
-  const handleChatSelect = (chat) => {
-    setActiveChat(chat);
-  };
-
+  // Function to open the Date Picker overlay
   const handleDatePickerOpen = () => {
     setIsDatePickerOpen(true);
   };
 
+  // Function to close the Date Picker overlay
   const handleDatePickerClose = () => {
     setIsDatePickerOpen(false);
   };
 
+  // Function to apply a date range filter
   const handleApplyDateRange = (startDate, endDate) => {
     console.log(`Selected date range: ${startDate} - ${endDate}`);
     // Add your logic here to filter messages based on the selected date range
     setIsDatePickerOpen(false);
   };
 
+  // Fetch the list of users the logged-in user has interacted with
+  const handleOpenUserModal = async () => {
+    const users = await getUsersList(); // Fetch users from Firebase
+    setUserList(users);
+    setOpenUserModal(true);
+  };
+
+  const handleAddUserToChat = async (userId) => {
+    if (activeChat) {
+      await addUserToGroupChat(activeChat.id, userId); // Add user to the group in Firebase
+      setOpenUserModal(false);
+      console.log(`User ${userId} added to chat ${activeChat.id}`);
+      // Optional: Show a success message or notification
+    } else {
+      console.log("No active chat selected to add users to.");
+    }
+  };
+
   return (
-    <Box sx={{ bgcolor: '#FCF6F1', minHeight: '100vh' }}>
+    <Box sx={{ bgcolor: "#FCF6F1", minHeight: "100vh" }}>
       <TopBar onDatePickerOpen={handleDatePickerOpen} />
-      <Box sx={{ width: '90%', mx: 'auto', pt: '125px' }}>
-        <Grid container spacing={3} sx={{ height: 'calc(100vh - 125px)' }}>
+      <Box sx={{ width: "90%", mx: "auto", pt: "125px" }}>
+        <Grid container spacing={3} sx={{ height: "calc(100vh - 125px)" }}>
           {/* Left Column */}
-          <Grid item xs={12} md={4} sx={{ height: '100%' }}>
-            <Box sx={{ height: '100%', bgcolor: 'white', borderRadius: 5, p: 3, boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.1)', display: 'flex', flexDirection: 'column' }}>
+          <Grid item xs={12} md={4} sx={{ height: "100%" }}>
+            <Box
+              sx={{
+                height: "100%",
+                bgcolor: "white",
+                borderRadius: 5,
+                p: 3,
+                boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
               {/* Navigation Buttons */}
-              <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-                {['All', 'New', 'Groups', 'Requests'].map((tab) => (
+              <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
+                {["All", "New", "Groups", "Requests"].map((tab) => (
                   <Button
                     key={tab}
-                    variant={activeTab === tab ? 'contained' : 'outlined'}
-                    onClick={() => handleTabChange(tab)}
+                    variant={activeTab === tab ? "contained" : "outlined"}
+                    onClick={() => setActiveTab(tab)}
                     sx={{
-                      borderRadius: '20px',
-                      bgcolor: activeTab === tab ? 'black' : 'transparent',
-                      color: activeTab === tab ? 'white' : 'black',
+                      borderRadius: "20px",
+                      bgcolor: activeTab === tab ? "black" : "transparent",
+                      color: activeTab === tab ? "white" : "black",
                       px: 3,
                       flexGrow: 1,
                     }}
@@ -71,50 +152,47 @@ const Messages = () => {
               </Box>
 
               {/* Chat List */}
-              <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
-                {sampleChats.map((chat) => (
-                  <Box
-                    key={chat.id}
-                    onClick={() => handleChatSelect(chat)}
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      p: 2,
-                      bgcolor: chat.isActive ? 'black' : chat.isRequest ? '#FF7043' : '#F4F4F4',
-                      color: chat.isActive || chat.isRequest ? 'white' : 'black',
-                      borderRadius: '16px',
-                      mb: 2,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {chat.isGroup ? (
-                      <AvatarGroup max={3} sx={{ mr: 2 }}>
-                        <Avatar src="/api/placeholder/32/32" />
-                        <Avatar src="/api/placeholder/32/32" />
-                        <Avatar src="/api/placeholder/32/32" />
-                      </AvatarGroup>
-                    ) : (
-                      <Avatar src={chat.avatar} alt={chat.name} sx={{ mr: 2 }} />
-                    )}
-                    <Box>
-                      <Typography variant="subtitle1" fontWeight="bold">{chat.name}</Typography>
-                      <Typography variant="body2" color={chat.isActive || chat.isRequest ? 'grey.300' : 'text.secondary'}>{chat.lastMessage}</Typography>
-                    </Box>
-                  </Box>
-                ))}
+              <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
+                {/* Display the list of chats here */}
               </Box>
             </Box>
           </Grid>
 
           {/* Right Column */}
-          <Grid item xs={12} md={8} sx={{ height: '100%' }}>
-            <Box sx={{ height: '100%', bgcolor: 'white', borderRadius: 5, p: 3, boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.1)', display: 'flex', flexDirection: 'column' }}>
-              {/* Header */}
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Avatar src={activeChat.avatar} alt={activeChat.name} />
-                  <Typography variant="h6">{activeChat.name}</Typography>
-                  <IconButton sx={{ ml: 1, bgcolor: '#F5F5F5', borderRadius: '50%' }}>
+          <Grid item xs={12} md={8}>
+            <Box
+              sx={{
+                height: "100%",
+                bgcolor: "white",
+                borderRadius: 5,
+                p: 3,
+                boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  mb: 2,
+                }}
+              >
+                {/* Chat Header */}
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                  {activeChat?.users && (
+                    <AvatarGroup max={3}>
+                      {Object.keys(activeChat.users).map((userId) => (
+                        <Avatar key={userId} src={getUserAvatar(userId)} /> // getUserAvatar would fetch the avatar from the user profile
+                      ))}
+                    </AvatarGroup>
+                  )}
+                  <Typography variant="h6">{activeChat?.name}</Typography>
+                  <IconButton
+                    sx={{ ml: 1, bgcolor: "#F5F5F5", borderRadius: "50%" }}
+                    onClick={handleOpenUserModal}
+                  >
                     <AddIcon />
                   </IconButton>
                 </Box>
@@ -124,45 +202,132 @@ const Messages = () => {
               </Box>
 
               {/* Chat Area */}
-              <Box sx={{ flexGrow: 1, overflowY: 'auto', mb: 2, bgcolor: '#FCF6F1', p: 2, borderRadius: '20px' }}>
-                {/* Chat messages would go here */}
-                <Box sx={{ bgcolor: '#FFFFFF', p: 2, borderRadius: '12px', mb: 2, maxWidth: '75%' }}>
-                  <Typography variant="body1" sx={{ color: 'text.primary' }}>
-                    id hate to say short it and it puts a giant boondoggle candle up or its sell the news dump candle down probably the 2 options.
-                  </Typography>
-                </Box>
-                <Box sx={{ bgcolor: '#FFFFFF', p: 2, borderRadius: '12px', mb: 2, maxWidth: '75%' }}>
-                  <Typography variant="body1" sx={{ color: 'text.primary' }}>
-                    I’m convinced first minute Monday will start killing already
-                  </Typography>
-                </Box>
+              <Box
+                sx={{
+                  flexGrow: 1,
+                  overflowY: "auto",
+                  mb: 2,
+                  bgcolor: "#FCF6F1",
+                  p: 2,
+                  borderRadius: "20px",
+                }}
+              >
+                {chatMessages.map((message, index) => (
+                  <Box
+                    key={index}
+                    sx={{
+                      bgcolor:
+                        message.sender === loggedInUser.userId
+                          ? "#DCF8C6"
+                          : "#FFFFFF",
+                      p: 2,
+                      borderRadius: "12px",
+                      mb: 2,
+                      maxWidth: "75%",
+                      alignSelf:
+                        message.sender === loggedInUser.userId
+                          ? "flex-end"
+                          : "flex-start",
+                    }}
+                  >
+                    <Typography variant="body1" sx={{ color: "text.primary" }}>
+                      {message.text}
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      color="textSecondary"
+                      sx={{ display: "block", mt: 0.5 }}
+                    >
+                      {new Date(message.timestamp).toLocaleTimeString()}
+                    </Typography>
+                  </Box>
+                ))}
               </Box>
 
               {/* Message Input Area */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                 <TextField
                   variant="outlined"
                   placeholder="New Messages"
                   fullWidth
-                  sx={{ bgcolor: '#F4F4F4', borderRadius: '50px', '& fieldset': { border: 'none' } }}
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  sx={{
+                    bgcolor: "#FCF6F1",
+                    borderRadius: "50px",
+                    "& fieldset": { border: "none" },
+                  }}
                 />
-                <IconButton sx={{ bgcolor: 'white', color: 'black', borderRadius: '50%', p: 1.5 }}>
+                <IconButton
+                  sx={{
+                    bgcolor: "white",
+                    color: "black",
+                    borderRadius: "50%",
+                    p: 1.5,
+                  }}
+                >
                   <ImageIcon />
                 </IconButton>
-                <IconButton sx={{ bgcolor: 'black', color: 'white', borderRadius: '50%', p: 1.5 }}>
+                <IconButton
+                  onClick={handleSendMessage}
+                  sx={{
+                    bgcolor: "black",
+                    color: "white",
+                    borderRadius: "50%",
+                    p: 1.5,
+                  }}
+                >
                   <SendIcon />
                 </IconButton>
               </Box>
+              {/* User Selection Modal for Group Chat */}
+              <Dialog
+                open={openUserModal}
+                onClose={() => setOpenUserModal(false)}
+                sx={{
+                  "& .MuiBackdrop-root": {
+                    backgroundColor: "rgba(255, 255, 255, 0.1)",
+                    backdropFilter: "blur(10px)",
+                    WebkitBackdropFilter: "blur(10px)",
+                  },
+                  "& .MuiDialog-paper": {
+                    borderRadius: "20px",
+                    backgroundColor: "rgba(255, 255, 255, 0.95)",
+                    padding: "5px",
+                    maxWidth: "500px",
+                    width: "100%",
+                    textAlign: "center",
+                  },
+                }}
+              >
+                <Box sx={{ p: 3 }}>
+                  <Typography variant="h6">Add Users to Chat</Typography>
+                  <List>
+                    {userList.map((user) => (
+                      <ListItem
+                        button
+                        key={user.userId}
+                        onClick={() => handleAddUserToChat(user.userId)}
+                      >
+                        <Avatar src={user.avatar} />
+                        <ListItemText
+                          primary={user.displayName || user.userId}
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                </Box>
+              </Dialog>
             </Box>
           </Grid>
         </Grid>
       </Box>
 
       {/* Date Picker Overlay */}
-      <DatePickerOverlay 
-        open={isDatePickerOpen} 
-        onClose={handleDatePickerClose} 
-        onApply={handleApplyDateRange} 
+      <DatePickerOverlay
+        open={isDatePickerOpen}
+        onClose={handleDatePickerClose}
+        onApply={handleApplyDateRange}
       />
     </Box>
   );

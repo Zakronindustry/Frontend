@@ -6,13 +6,15 @@ import {
   ListItem,
   ListItemText,
   Grid,
+  IconButton,
 } from '@mui/material';
 import { styled } from '@mui/system';
-import { Bell, ChevronRight, BookOpen, HelpCircle, FileText, ShieldCheck, User } from 'lucide-react';
+import { Bell, ChevronRight, BookOpen, FileText, ShieldCheck, User } from 'lucide-react';
 import TopBar from './TopBar';
 import ProfileComponent from './ProfileComponent';
 import Notifications from './Notifications';
 import BookmarkComponent from './BookmarkComponent'; // Adjust path according to your project structure
+import NotificationOverlay from './NotificationOverlay'; // Import the Notification Overlay
 
 // Styled components with fallback values
 const StyledBox = styled(Box)({
@@ -25,6 +27,7 @@ const StyledBox = styled(Box)({
 
 const ProfileSettingsPage = ({ user }) => {  // Accept the `user` prop here
   const [selectedSetting, setSelectedSetting] = useState("Profile");
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);  // State for notification overlay
 
   const profileData = {
     name: user?.userId || "Retro_D@niel!",  // Use user data if available
@@ -33,7 +36,7 @@ const ProfileSettingsPage = ({ user }) => {  // Accept the `user` prop here
     followers: 197,
   };
 
-  // Updated menu items (Removed "Language" and "Help Center")
+  // Updated menu items
   const menuItems = [
     { text: "Profile", icon: <User size={20} /> },
     { text: "Bookmark", icon: <BookOpen size={20} /> },
@@ -59,6 +62,11 @@ const ProfileSettingsPage = ({ user }) => {  // Accept the `user` prop here
     }
   };
 
+  // Toggle Notification Overlay
+  const toggleNotificationOverlay = () => {
+    setIsNotificationOpen((prev) => !prev);
+  };
+
   return (
     <Box sx={{ bgcolor: '#FCF6F1', minHeight: '100vh' }}>
       <TopBar user={user} /> {/* Pass the `user` to the TopBar */}
@@ -67,12 +75,24 @@ const ProfileSettingsPage = ({ user }) => {  // Accept the `user` prop here
           {/* Left Column */}
           <Grid item xs={12} md={4}>
             <StyledBox padding='25px'>
-              <Box display="flex" flexDirection="column" alignItems="center" mb={3}>
+              <Box display="flex" flexDirection="column" alignItems="center" mb={3} position="relative">
+                <IconButton
+                  sx={{
+                    position: 'absolute',
+                    top: '-5px', // Adjust positioning to the top-left corner of the card
+                    left: '-5px',
+                    backgroundColor: '#FCF6F1',
+                  }}
+                  onClick={toggleNotificationOverlay}
+                >
+                  <Bell size={24} color="black" />
+                </IconButton>
+
                 <Box
                   width={100}
                   height={100}
                   bgcolor="#FCF6F1"
-                  border= "2px solid #FFFFFF"
+                  border="2px solid #FFFFFF"
                   borderRadius="50%"
                   display="flex"
                   alignItems="center"
@@ -150,6 +170,26 @@ const ProfileSettingsPage = ({ user }) => {  // Accept the `user` prop here
           </Grid>
         </Grid>
       </Box>
+
+      {/* Notification Overlay positioned at the top-left corner of the left card */}
+      {isNotificationOpen && (
+        <Box
+          sx={{
+            position: 'fixed',
+            top: '160px',
+            left: '75px',
+            width: '300px',
+            zIndex: 1500,
+            bgcolor: 'white',
+            borderRadius: '10px',
+            boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.1)',
+            overflowY: 'auto',
+            p: 2,
+          }}
+        >
+          <NotificationOverlay notifications={[]} onClose={toggleNotificationOverlay} />
+        </Box>
+      )}
     </Box>
   );
 };
