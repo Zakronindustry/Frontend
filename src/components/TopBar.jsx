@@ -285,7 +285,7 @@ const TopBar = ({
 
   const getTitle = () => {
     switch (location.pathname) {
-      case "/":
+      case "/notes":
         return `Hi 👋 ${user?.userId || userId}`;
       case "/community":
         return "Community";
@@ -301,7 +301,7 @@ const TopBar = ({
   };
 
   const menuItems = [
-    { icon: <NoteAlt />, text: "My Notes", path: "/" },
+    { icon: <NoteAlt />, text: "My Notes", path: "/notes" },
     { icon: <ShowChart />, text: "Analytics", path: "/analytics" },
     { icon: <Public />, text: "Community", path: "/community" },
     { icon: <Email />, text: "Messages", path: "/messages" },
