@@ -24,9 +24,10 @@ import PublicTradeCardOverlay from "./PublicTradeCardOverlay"; // Adjust the pat
 
 const PublicTradeCard = ({
   id,
+  emotion,
   color,
-  title,
-  symbol,
+  reason,
+  instrument,
   profitLoss,
   entryPoint,
   exitPoint,
@@ -51,7 +52,7 @@ const PublicTradeCard = ({
       : description || "";
 
   const truncatedTitle =
-    title && title.length > 35 ? `${title.substring(0, 35)}...` : title || "";
+    reason && reason.length > 35 ? `${reason.substring(0, 35)}...` : reason || "";
 
   // Handle opening and closing of the three-dot menu
   const handleMenuOpen = (event) => {
@@ -78,7 +79,7 @@ const PublicTradeCard = ({
 
     try {
       console.log(id, color, title, symbol, emoji);
-      const tradeRef = ref(realtimeDb, `publicTrades/${id}`);
+      const tradeRef = ref(realtimeDb, `users/${userId}/Trades/publicTrades/${id}`);
       await update(tradeRef, { likes: newLikes });
     } catch (error) {
       console.error("Error updating likes:", error);
@@ -100,7 +101,7 @@ const PublicTradeCard = ({
     setLikes(newLikes);
 
     try {
-      const tradeRef = ref(realtimeDb, `publicTrades/${id}`);
+      const tradeRef = ref(realtimeDb, `users/${userId}/Trades/publicTrades/${id}`);
       await update(tradeRef, { likes: newLikes });
     } catch (error) {
       console.error("Error updating likes:", error);
@@ -118,7 +119,7 @@ const PublicTradeCard = ({
 
   // Handle share action (copy link to clipboard)
   const handleShare = () => {
-    const cardLink = `${window.location.origin}/publicTrades/${id}`;
+    const cardLink = `${window.location.origin}users/${userId}/Trades/publicTrades/${id}`;
     navigator.clipboard.writeText(cardLink);
     alert("Link copied to clipboard");
     handleMenuClose();
@@ -127,7 +128,7 @@ const PublicTradeCard = ({
   const handleBookmark = async () => {
     try {
       // Retrieve the user profile
-      const userProfile = await getUserProfile(userId); // Assume userId is passed as a prop
+      const userProfile = await getUserProfile(userId); // userId is passed as a prop
       const bookmarks = userProfile.bookmarks || []; // Existing bookmarks or an empty array
 
       // Check if this trade is already bookmarked
@@ -139,7 +140,7 @@ const PublicTradeCard = ({
       }
 
       // Add the new bookmark
-      const newBookmark = { id, title, emoji, description, color, tags };
+      const newBookmark = { id, emotion, reason, emoji, description, color, tags };
 
       // Update the user's bookmarks
       const updatedBookmarks = [...bookmarks, newBookmark];
@@ -260,7 +261,7 @@ const PublicTradeCard = ({
 
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 1 }}>
             <Chip
-              label={symbol}
+              label={instrument}
               size="small"
               sx={{
                 backgroundColor: "rgba(255,255,255,0.7)",
@@ -417,8 +418,9 @@ const PublicTradeCard = ({
         <PublicTradeCardOverlay
           card={{
             color,
-            title,
-            symbol,
+            emotion,
+            reason,
+            instrument,
             profitLoss,
             entryPoint,
             exitPoint,
